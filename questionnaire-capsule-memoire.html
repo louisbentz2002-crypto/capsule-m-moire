@@ -1,0 +1,1633 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Capsule Mémoire — Votre Questionnaire</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400;1,500&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bleu-nuit: #1A2B4A;
+      --bleu-moyen: #2E4270;
+      --beige: #F0EAE0;
+      --or: #C4A46B;
+      --or-light: #D4B98A;
+      --blanc: #FAF8F5;
+      --texte: #2D3748;
+      --texte-light: #6B7A99;
+      --border: #E0D8CC;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--blanc);
+      font-family: 'DM Sans', sans-serif;
+      font-weight: 300;
+      color: var(--texte);
+      min-height: 100vh;
+    }
+
+    /* ── HEADER ── */
+    .header {
+      background: var(--bleu-nuit);
+      padding: 28px 40px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      border-bottom: 1px solid rgba(196,164,107,0.2);
+    }
+
+    .logo-wrap {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .logo-text .capsule {
+      font-family: 'Cormorant Garamond', serif;
+      font-weight: 300;
+      font-size: 20px;
+      letter-spacing: 0.18em;
+      color: var(--blanc);
+      text-transform: uppercase;
+      line-height: 1;
+    }
+
+    .logo-text .memoire {
+      font-family: 'Cormorant Garamond', serif;
+      font-weight: 500;
+      font-size: 20px;
+      letter-spacing: 0.28em;
+      color: var(--or);
+      text-transform: uppercase;
+      line-height: 1.2;
+    }
+
+    .header-step {
+      font-family: 'DM Sans', sans-serif;
+      font-weight: 300;
+      font-size: 11px;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: rgba(240,234,224,0.45);
+    }
+
+    /* ── PROGRESS ── */
+    .progress-bar-wrap {
+      height: 3px;
+      background: rgba(196,164,107,0.15);
+      position: sticky;
+      top: 85px;
+      z-index: 99;
+    }
+
+    .progress-bar-fill {
+      height: 100%;
+      background: linear-gradient(to right, var(--bleu-moyen), var(--or));
+      transition: width 0.5s ease;
+    }
+
+    /* ── LAYOUT ── */
+    .container {
+      max-width: 720px;
+      margin: 0 auto;
+      padding: 60px 24px 100px;
+    }
+
+    /* ── PAGES ── */
+    .page { display: none; }
+    .page.active { display: block; animation: fadeIn 0.4s ease; }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(12px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ── PAGE HEADER ── */
+    .page-eyebrow {
+      font-family: 'DM Sans', sans-serif;
+      font-weight: 300;
+      font-size: 10px;
+      letter-spacing: 0.28em;
+      text-transform: uppercase;
+      color: var(--or);
+      margin-bottom: 12px;
+    }
+
+    .page-title {
+      font-family: 'Cormorant Garamond', serif;
+      font-weight: 300;
+      font-size: 38px;
+      color: var(--bleu-nuit);
+      line-height: 1.15;
+      margin-bottom: 14px;
+    }
+
+    .page-subtitle {
+      font-family: 'DM Sans', sans-serif;
+      font-weight: 300;
+      font-size: 15px;
+      color: var(--texte-light);
+      line-height: 1.7;
+      margin-bottom: 48px;
+      max-width: 560px;
+    }
+
+    .divider {
+      height: 1px;
+      background: linear-gradient(to right, var(--or), transparent);
+      margin-bottom: 48px;
+      width: 80px;
+    }
+
+    /* ── QUESTIONS ── */
+    .question {
+      margin-bottom: 36px;
+    }
+
+    .question label {
+      display: block;
+      font-family: 'DM Sans', sans-serif;
+      font-weight: 400;
+      font-size: 14px;
+      color: var(--bleu-nuit);
+      letter-spacing: 0.02em;
+      margin-bottom: 8px;
+    }
+
+    .question label .optional {
+      font-weight: 300;
+      font-size: 12px;
+      color: var(--texte-light);
+      margin-left: 6px;
+    }
+
+    .question label .required {
+      color: var(--or);
+      margin-left: 3px;
+    }
+
+    .question input[type="text"],
+    .question input[type="email"],
+    .question input[type="tel"],
+    .question input[type="date"],
+    .question textarea,
+    .question select {
+      width: 100%;
+      background: white;
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 14px 16px;
+      font-family: 'DM Sans', sans-serif;
+      font-weight: 300;
+      font-size: 14px;
+      color: var(--texte);
+      transition: border-color 0.2s, box-shadow 0.2s;
+      outline: none;
+      appearance: none;
+    }
+
+    .question input:focus,
+    .question textarea:focus,
+    .question select:focus {
+      border-color: var(--or);
+      box-shadow: 0 0 0 3px rgba(196,164,107,0.12);
+    }
+
+    .question textarea {
+      min-height: 120px;
+      resize: vertical;
+      line-height: 1.7;
+    }
+
+    .question textarea.large { min-height: 180px; }
+
+    .question select {
+      background-image: url("data:image/svg+xml,%3Csvg width='12' height='8' viewBox='0 0 12 8' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1L6 6L11 1' stroke='%23C4A46B' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 16px center;
+      padding-right: 40px;
+      cursor: pointer;
+    }
+
+    /* ── RADIO & CHECKBOX ── */
+    .radio-group, .checkbox-group {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .radio-group.horizontal, .checkbox-group.horizontal {
+      flex-direction: row;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .radio-item, .checkbox-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 16px;
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      cursor: pointer;
+      transition: all 0.2s;
+      background: white;
+    }
+
+    .radio-group.horizontal .radio-item,
+    .checkbox-group.horizontal .checkbox-item {
+      flex: 0 0 auto;
+    }
+
+    .radio-item:hover, .checkbox-item:hover {
+      border-color: var(--or-light);
+      background: rgba(196,164,107,0.04);
+    }
+
+    .radio-item input, .checkbox-item input {
+      width: 18px;
+      height: 18px;
+      accent-color: var(--or);
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+
+    .radio-item span, .checkbox-item span {
+      font-family: 'DM Sans', sans-serif;
+      font-weight: 300;
+      font-size: 14px;
+      color: var(--texte);
+    }
+
+    .radio-item.selected, .checkbox-item.selected {
+      border-color: var(--or);
+      background: rgba(196,164,107,0.06);
+    }
+
+    /* ── FILE UPLOAD ── */
+    .upload-zone {
+      border: 1.5px dashed var(--border);
+      border-radius: 6px;
+      padding: 32px 24px;
+      text-align: center;
+      background: rgba(240,234,224,0.3);
+      cursor: pointer;
+      transition: all 0.2s;
+      position: relative;
+    }
+
+    .upload-zone:hover {
+      border-color: var(--or);
+      background: rgba(196,164,107,0.06);
+    }
+
+    .upload-zone input[type="file"] {
+      position: absolute;
+      inset: 0;
+      opacity: 0;
+      cursor: pointer;
+      width: 100%;
+      height: 100%;
+    }
+
+    .upload-icon {
+      width: 40px;
+      height: 40px;
+      margin: 0 auto 14px;
+      opacity: 0.4;
+    }
+
+    .upload-label {
+      font-family: 'Cormorant Garamond', serif;
+      font-weight: 400;
+      font-size: 17px;
+      color: var(--bleu-nuit);
+      margin-bottom: 6px;
+    }
+
+    .upload-hint {
+      font-family: 'DM Sans', sans-serif;
+      font-weight: 300;
+      font-size: 12px;
+      color: var(--texte-light);
+      letter-spacing: 0.03em;
+    }
+
+    .upload-files-list {
+      margin-top: 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .upload-file-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 14px;
+      background: white;
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      font-size: 13px;
+      color: var(--texte);
+    }
+
+    .upload-file-item .file-icon { color: var(--or); font-size: 16px; }
+
+    /* ── NOTICE BOX ── */
+    .notice {
+      background: rgba(196,164,107,0.08);
+      border-left: 3px solid var(--or);
+      padding: 16px 20px;
+      border-radius: 0 4px 4px 0;
+      margin-bottom: 36px;
+    }
+
+    .notice p {
+      font-family: 'DM Sans', sans-serif;
+      font-weight: 300;
+      font-size: 13px;
+      color: var(--texte);
+      line-height: 1.6;
+    }
+
+    .notice p strong {
+      font-weight: 500;
+      color: var(--bleu-nuit);
+    }
+
+    /* ── SECTION TITLE ── */
+    .section-label {
+      font-family: 'DM Sans', sans-serif;
+      font-weight: 300;
+      font-size: 10px;
+      letter-spacing: 0.28em;
+      text-transform: uppercase;
+      color: var(--or);
+      margin-bottom: 24px;
+      margin-top: 40px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid var(--beige);
+    }
+
+    .section-label:first-of-type { margin-top: 0; }
+
+    /* ── BUTTONS ── */
+    .btn-nav {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 52px;
+      padding-top: 32px;
+      border-top: 1px solid var(--beige);
+    }
+
+    .btn {
+      font-family: 'DM Sans', sans-serif;
+      font-weight: 400;
+      font-size: 13px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      border: none;
+      cursor: pointer;
+      transition: all 0.25s;
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .btn-primary {
+      background: var(--bleu-nuit);
+      color: var(--blanc);
+      padding: 16px 36px;
+      border-radius: 2px;
+    }
+
+    .btn-primary:hover {
+      background: var(--bleu-moyen);
+      transform: translateY(-1px);
+      box-shadow: 0 6px 20px rgba(26,43,74,0.2);
+    }
+
+    .btn-secondary {
+      background: transparent;
+      color: var(--texte-light);
+      padding: 16px 0;
+    }
+
+    .btn-secondary:hover { color: var(--bleu-nuit); }
+
+    .btn-submit {
+      background: var(--or);
+      color: white;
+      padding: 18px 48px;
+      border-radius: 2px;
+      font-size: 14px;
+    }
+
+    .btn-submit:hover {
+      background: var(--or-light);
+      transform: translateY(-1px);
+      box-shadow: 0 8px 24px rgba(196,164,107,0.35);
+    }
+
+    /* ── WELCOME PAGE ── */
+    .welcome-page {
+      text-align: center;
+      padding: 80px 24px 100px;
+      max-width: 620px;
+      margin: 0 auto;
+    }
+
+    .welcome-logo {
+      margin-bottom: 52px;
+    }
+
+    .welcome-title {
+      font-family: 'Cormorant Garamond', serif;
+      font-weight: 300;
+      font-size: 46px;
+      color: var(--bleu-nuit);
+      line-height: 1.15;
+      margin-bottom: 20px;
+    }
+
+    .welcome-title em {
+      font-style: italic;
+      color: var(--or);
+    }
+
+    .welcome-text {
+      font-family: 'DM Sans', sans-serif;
+      font-weight: 300;
+      font-size: 16px;
+      color: var(--texte-light);
+      line-height: 1.8;
+      margin-bottom: 48px;
+    }
+
+    .welcome-divider {
+      width: 60px;
+      height: 1px;
+      background: linear-gradient(to right, transparent, var(--or), transparent);
+      margin: 0 auto 48px;
+    }
+
+    .btn-start {
+      background: var(--bleu-nuit);
+      color: var(--blanc);
+      padding: 20px 60px;
+      border-radius: 2px;
+      font-family: 'DM Sans', sans-serif;
+      font-weight: 400;
+      font-size: 12px;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      border: none;
+      cursor: pointer;
+      transition: all 0.25s;
+      display: inline-block;
+    }
+
+    .btn-start:hover {
+      background: var(--bleu-moyen);
+      transform: translateY(-2px);
+      box-shadow: 0 8px 28px rgba(26,43,74,0.25);
+    }
+
+    /* ── CONFIRMATION PAGE ── */
+    .confirmation-page {
+      text-align: center;
+      padding: 80px 24px 100px;
+      max-width: 580px;
+      margin: 0 auto;
+    }
+
+    .confirmation-icon {
+      width: 72px;
+      height: 72px;
+      border-radius: 50%;
+      background: rgba(196,164,107,0.12);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 32px;
+      border: 1px solid rgba(196,164,107,0.3);
+    }
+
+    .confirmation-title {
+      font-family: 'Cormorant Garamond', serif;
+      font-weight: 300;
+      font-size: 42px;
+      color: var(--bleu-nuit);
+      line-height: 1.2;
+      margin-bottom: 20px;
+    }
+
+    .confirmation-text {
+      font-family: 'DM Sans', sans-serif;
+      font-weight: 300;
+      font-size: 15px;
+      color: var(--texte-light);
+      line-height: 1.8;
+      margin-bottom: 40px;
+    }
+
+    .confirmation-steps {
+      text-align: left;
+      background: rgba(240,234,224,0.4);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 28px 32px;
+      margin-bottom: 40px;
+    }
+
+    .confirmation-step {
+      display: flex;
+      gap: 16px;
+      margin-bottom: 18px;
+    }
+
+    .confirmation-step:last-child { margin-bottom: 0; }
+
+    .step-num {
+      width: 26px;
+      height: 26px;
+      background: var(--bleu-nuit);
+      color: var(--or);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 13px;
+      flex-shrink: 0;
+    }
+
+    .step-text {
+      font-family: 'DM Sans', sans-serif;
+      font-weight: 300;
+      font-size: 14px;
+      color: var(--texte);
+      line-height: 1.6;
+      padding-top: 2px;
+    }
+
+    /* ── STEP INDICATOR (header) ── */
+    .step-dots {
+      display: flex;
+      gap: 6px;
+      align-items: center;
+    }
+
+    .step-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: rgba(196,164,107,0.2);
+      transition: all 0.3s;
+    }
+
+    .step-dot.active {
+      background: var(--or);
+      width: 20px;
+      border-radius: 3px;
+    }
+
+    .step-dot.done { background: rgba(196,164,107,0.5); }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 600px) {
+      .header { padding: 20px 20px; }
+      .container { padding: 40px 20px 80px; }
+      .page-title { font-size: 28px; }
+      .welcome-title { font-size: 34px; }
+      .radio-group.horizontal { flex-direction: column; }
+    }
+
+    /* ── CHAR COUNTER ── */
+    .char-counter {
+      font-size: 11px;
+      color: var(--texte-light);
+      text-align: right;
+      margin-top: 5px;
+    }
+
+    /* ── CONDITIONAL ── */
+    .conditional { display: none; }
+    .conditional.visible { display: block; }
+
+    /* ── ERROR ── */
+    .error-msg {
+      font-size: 12px;
+      color: #c0392b;
+      margin-top: 5px;
+      display: none;
+    }
+
+    .question.has-error input,
+    .question.has-error textarea,
+    .question.has-error select {
+      border-color: #c0392b;
+    }
+
+    .question.has-error .error-msg { display: block; }
+  </style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header class="header">
+  <div class="logo-wrap">
+    <svg width="48" height="26" viewBox="0 0 96 50" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <ellipse cx="48" cy="25" rx="46" ry="22" stroke="#FAF8F5" stroke-width="1.8" fill="none"/>
+      <ellipse cx="48" cy="25" rx="28" ry="13" stroke="#C4A46B" stroke-width="0.8" fill="none" stroke-dasharray="2 4"/>
+      <circle cx="48" cy="25" r="2.5" fill="#C4A46B"/>
+      <line x1="48" y1="20" x2="48" y2="18" stroke="#C4A46B" stroke-width="0.9" stroke-linecap="round"/>
+      <line x1="48" y1="30" x2="48" y2="32" stroke="#C4A46B" stroke-width="0.9" stroke-linecap="round"/>
+      <line x1="43" y1="25" x2="41" y2="25" stroke="#C4A46B" stroke-width="0.9" stroke-linecap="round"/>
+      <line x1="53" y1="25" x2="55" y2="25" stroke="#C4A46B" stroke-width="0.9" stroke-linecap="round"/>
+    </svg>
+    <div class="logo-text">
+      <div class="capsule">Capsule</div>
+      <div class="memoire">Mémoire</div>
+    </div>
+  </div>
+  <div>
+    <div class="header-step" id="headerStep">Questionnaire personnalisé</div>
+    <div class="step-dots" id="stepDots"></div>
+  </div>
+</header>
+
+<!-- PROGRESS BAR -->
+<div class="progress-bar-wrap">
+  <div class="progress-bar-fill" id="progressBar" style="width: 0%"></div>
+</div>
+
+<!-- FORM -->
+<form id="mainForm" action="https://formspree.io/f/xpqkgnkj" method="POST" enctype="multipart/form-data">
+
+<!-- ══════════════════════════════════════════════ -->
+<!-- PAGE 0 — ACCUEIL -->
+<!-- ══════════════════════════════════════════════ -->
+<div class="page active" id="page-0">
+  <div class="welcome-page">
+    <div class="welcome-logo">
+      <svg width="80" height="42" viewBox="0 0 96 50" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <ellipse cx="48" cy="25" rx="46" ry="22" stroke="#1A2B4A" stroke-width="1.8" fill="none"/>
+        <ellipse cx="48" cy="25" rx="28" ry="13" stroke="#C4A46B" stroke-width="0.8" fill="none" stroke-dasharray="2 4"/>
+        <circle cx="48" cy="25" r="2.5" fill="#C4A46B"/>
+        <line x1="48" y1="20" x2="48" y2="18" stroke="#C4A46B" stroke-width="0.9" stroke-linecap="round"/>
+        <line x1="48" y1="30" x2="48" y2="32" stroke="#C4A46B" stroke-width="0.9" stroke-linecap="round"/>
+        <line x1="43" y1="25" x2="41" y2="25" stroke="#C4A46B" stroke-width="0.9" stroke-linecap="round"/>
+        <line x1="53" y1="25" x2="55" y2="25" stroke="#C4A46B" stroke-width="0.9" stroke-linecap="round"/>
+      </svg>
+    </div>
+    <div class="welcome-title">
+      Votre capsule<br><em>commence ici.</em>
+    </div>
+    <div class="welcome-divider"></div>
+    <div class="welcome-text">
+      Ce questionnaire nous permet de créer un hommage unique et profondément personnalisé.<br>
+      Prenez le temps qu'il vous faut — il n'y a pas de bonne ou mauvaise réponse.<br>
+      Tout ce que vous partagez est strictement confidentiel.
+    </div>
+    <button type="button" class="btn-start" onclick="goToPage(1)">
+      Commencer →
+    </button>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════ -->
+<!-- PAGE 1 — VOTRE COMMANDE -->
+<!-- ══════════════════════════════════════════════ -->
+<div class="page" id="page-1">
+  <div class="container">
+    <div class="page-eyebrow">01 / 10</div>
+    <div class="page-title">Votre commande</div>
+    <div class="divider"></div>
+
+    <div class="question">
+      <label>Quelle offre avez-vous choisie ? <span class="required">*</span></label>
+      <div class="radio-group" id="offreGroup">
+        <label class="radio-item">
+          <input type="radio" name="offre" value="Capsule Souvenir — 690€" onchange="handleOffreChange()">
+          <span><strong>Capsule Souvenir — 690€</strong> &nbsp;·&nbsp; 3 photos animées, voix, vidéo 1-2 min, livraison 72h</span>
+        </label>
+        <label class="radio-item">
+          <input type="radio" name="offre" value="Capsule Mémoire Complète — 990€" onchange="handleOffreChange()">
+          <span><strong>Capsule Mémoire Complète — 990€</strong> &nbsp;·&nbsp; 10 photos animées, voix, vidéo, livre de vie PDF, livraison 5 jours</span>
+        </label>
+      </div>
+    </div>
+
+    <div class="question">
+      <label>Options ajoutées <span class="optional">(optionnel)</span></label>
+      <div class="checkbox-group">
+        <label class="checkbox-item">
+          <input type="checkbox" name="options[]" value="Livre de Vie Imprimé — 150€">
+          <span>Livre de Vie Imprimé — 150€</span>
+        </label>
+        <label class="checkbox-item">
+          <input type="checkbox" name="options[]" value="Souvenir Physique (clé USB + boîte) — 150€">
+          <span>Souvenir Physique (clé USB + boîte) — 150€</span>
+        </label>
+        <label class="checkbox-item">
+          <input type="checkbox" name="options[]" value="Deuxième version — 150€">
+          <span>Deuxième version (autre message / autre langue) — 150€</span>
+        </label>
+      </div>
+    </div>
+
+    <div class="question">
+      <label>Votre prénom et nom <span class="required">*</span></label>
+      <input type="text" name="client_nom" placeholder="Marie Dupont" required>
+    </div>
+
+    <div class="question">
+      <label>Votre adresse email <span class="required">*</span></label>
+      <input type="email" name="client_email" placeholder="marie@exemple.fr" required>
+    </div>
+
+    <div class="question">
+      <label>Votre téléphone <span class="optional">(optionnel)</span></label>
+      <input type="tel" name="client_telephone" placeholder="+33 6 00 00 00 00">
+    </div>
+
+    <div class="question">
+      <label>Quel est votre lien avec le défunt ? <span class="required">*</span></label>
+      <select name="lien_defunt" required>
+        <option value="">Choisissez…</option>
+        <option>Enfant</option>
+        <option>Conjoint / Conjointe</option>
+        <option>Parent</option>
+        <option>Frère / Sœur</option>
+        <option>Ami(e) proche</option>
+        <option>Petit-enfant</option>
+        <option>Autre</option>
+      </select>
+    </div>
+
+    <div class="btn-nav">
+      <button type="button" class="btn btn-secondary" onclick="goToPage(0)">← Retour</button>
+      <button type="button" class="btn btn-primary" onclick="nextPage(1)">Continuer →</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════ -->
+<!-- PAGE 2 — IDENTITÉ DU PROCHE -->
+<!-- ══════════════════════════════════════════════ -->
+<div class="page" id="page-2">
+  <div class="container">
+    <div class="page-eyebrow">02 / 10</div>
+    <div class="page-title">Votre proche</div>
+    <div class="page-subtitle">Ces informations nous permettent de personaliser chaque détail de votre capsule avec soin.</div>
+    <div class="divider"></div>
+
+    <div class="question">
+      <label>Son prénom <span class="required">*</span> <span class="optional">(celui qu'on utilisera dans la capsule)</span></label>
+      <input type="text" name="defunt_prenom" placeholder="Jean" required>
+    </div>
+
+    <div class="question">
+      <label>Son nom de famille</label>
+      <input type="text" name="defunt_nom" placeholder="Martin">
+    </div>
+
+    <div class="question">
+      <label>Date de naissance</label>
+      <input type="date" name="defunt_naissance">
+    </div>
+
+    <div class="question">
+      <label>Date de décès</label>
+      <input type="date" name="defunt_deces">
+    </div>
+
+    <div class="question">
+      <label>Ville ou région où il/elle a vécu</label>
+      <input type="text" name="defunt_ville" placeholder="Lyon, Bretagne, Paris…">
+    </div>
+
+    <div class="question">
+      <label>Sa profession <span class="optional">(optionnel)</span></label>
+      <input type="text" name="defunt_profession" placeholder="Institutrice, menuisier, médecin…">
+    </div>
+
+    <div class="question">
+      <label>Comment le/la décririez-vous en 3 mots ? <span class="required">*</span></label>
+      <input type="text" name="defunt_3mots" placeholder="Chaleureux, drôle, généreux…" required>
+    </div>
+
+    <div class="question">
+      <label>Quel était son caractère ? <span class="optional">(plusieurs choix possibles)</span></label>
+      <div class="checkbox-group horizontal">
+        <label class="checkbox-item"><input type="checkbox" name="caractere[]" value="Chaleureux"><span>Chaleureux</span></label>
+        <label class="checkbox-item"><input type="checkbox" name="caractere[]" value="Drôle"><span>Drôle</span></label>
+        <label class="checkbox-item"><input type="checkbox" name="caractere[]" value="Discret"><span>Discret</span></label>
+        <label class="checkbox-item"><input type="checkbox" name="caractere[]" value="Fort"><span>Fort</span></label>
+        <label class="checkbox-item"><input type="checkbox" name="caractere[]" value="Doux"><span>Doux</span></label>
+        <label class="checkbox-item"><input type="checkbox" name="caractere[]" value="Généreux"><span>Généreux</span></label>
+        <label class="checkbox-item"><input type="checkbox" name="caractere[]" value="Passionné"><span>Passionné</span></label>
+        <label class="checkbox-item"><input type="checkbox" name="caractere[]" value="Sage"><span>Sage</span></label>
+        <label class="checkbox-item"><input type="checkbox" name="caractere[]" value="Protecteur"><span>Protecteur</span></label>
+        <label class="checkbox-item"><input type="checkbox" name="caractere[]" value="Travailleur"><span>Travailleur</span></label>
+        <label class="checkbox-item"><input type="checkbox" name="caractere[]" value="Curieux"><span>Curieux</span></label>
+        <label class="checkbox-item"><input type="checkbox" name="caractere[]" value="Autre"><span>Autre</span></label>
+      </div>
+    </div>
+
+    <div class="btn-nav">
+      <button type="button" class="btn btn-secondary" onclick="goToPage(1)">← Retour</button>
+      <button type="button" class="btn btn-primary" onclick="nextPage(2)">Continuer →</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════ -->
+<!-- PAGE 3 — SA VIE & SON HISTOIRE -->
+<!-- ══════════════════════════════════════════════ -->
+<div class="page" id="page-3">
+  <div class="container">
+    <div class="page-eyebrow">03 / 10</div>
+    <div class="page-title">Sa vie & son histoire</div>
+    <div class="page-subtitle">Plus vous nous en dites, plus votre capsule sera fidèle à qui il/elle était vraiment.</div>
+    <div class="divider"></div>
+
+    <div class="question">
+      <label>Racontez-nous un souvenir marquant avec lui/elle <span class="required">*</span></label>
+      <textarea name="souvenir_marquant" class="large" placeholder="Un moment qui vous a marqué, une scène du quotidien, une aventure partagée…" required></textarea>
+    </div>
+
+    <div class="question">
+      <label>Quelle était sa plus grande fierté dans la vie ?</label>
+      <textarea name="plus_grande_fierte" placeholder="Sa famille, sa carrière, un accomplissement particulier…"></textarea>
+    </div>
+
+    <div class="question">
+      <label>Ses passions, hobbies, activités préférées <span class="required">*</span></label>
+      <textarea name="passions" placeholder="Jardinage, cuisine, pêche, musique, lecture, bricolage…" required></textarea>
+    </div>
+
+    <div class="question">
+      <label>Y avait-il un plat, une musique, un endroit qu'il/elle adorait ?</label>
+      <textarea name="preferences" placeholder="Sa recette fétiche, sa chanson préférée, la maison de famille, son coin de nature favori…"></textarea>
+    </div>
+
+    <div class="question">
+      <label>Quelles valeurs transmettait-il/elle ?</label>
+      <textarea name="valeurs" placeholder="Le travail, la famille, l'honnêteté, le partage, la bienveillance…"></textarea>
+    </div>
+
+    <div class="question">
+      <label>Ses expressions, phrases habituelles, façons de parler <span class="required">*</span> <span class="optional">(très important pour la voix)</span></label>
+      <textarea name="expressions" placeholder="&quot;La vie est belle !&quot;, &quot;On ne lâche pas&quot;, ses blagues récurrentes, son accent, ses mots à lui/elle…" required></textarea>
+    </div>
+
+    <div class="question">
+      <label>Comment parlait-il/elle ?</label>
+      <select name="facon_parler">
+        <option value="">Choisissez…</option>
+        <option>Lentement et posément</option>
+        <option>Avec énergie et humour</option>
+        <option>Avec douceur et tendresse</option>
+        <option>De façon directe et franche</option>
+        <option>Avec beaucoup d'histoires et d'anecdotes</option>
+      </select>
+    </div>
+
+    <div class="question">
+      <label>Une anecdote drôle ou tendre que vous aimeriez voir racontée <span class="optional">(optionnel)</span></label>
+      <textarea name="anecdote" placeholder="Une histoire qui fait sourire, qui résume bien qui il/elle était…"></textarea>
+    </div>
+
+    <div class="btn-nav">
+      <button type="button" class="btn btn-secondary" onclick="goToPage(2)">← Retour</button>
+      <button type="button" class="btn btn-primary" onclick="nextPage(3)">Continuer →</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════ -->
+<!-- PAGE 4 — LE MESSAGE -->
+<!-- ══════════════════════════════════════════════ -->
+<div class="page" id="page-4">
+  <div class="container">
+    <div class="page-eyebrow">04 / 10</div>
+    <div class="page-title">Le message</div>
+    <div class="page-subtitle">C'est le cœur de votre capsule. Ces mots, portés par sa voix, resteront pour toujours.</div>
+    <div class="divider"></div>
+
+    <div class="question">
+      <label>Souhaitez-vous qu'il/elle transmette un message précis ? <span class="required">*</span></label>
+      <div class="radio-group" id="messageTypeGroup">
+        <label class="radio-item">
+          <input type="radio" name="type_message" value="Je veux écrire le message moi-même" onchange="handleMessageType()">
+          <span>Je veux écrire le message moi-même</span>
+        </label>
+        <label class="radio-item">
+          <input type="radio" name="type_message" value="Je veux que vous l'écriviez à partir de mes réponses" onchange="handleMessageType()">
+          <span>Je veux que vous l'écriviez à partir de mes réponses</span>
+        </label>
+        <label class="radio-item">
+          <input type="radio" name="type_message" value="Je préfère une histoire de vie racontée" onchange="handleMessageType()">
+          <span>Je préfère une histoire de vie racontée</span>
+        </label>
+      </div>
+    </div>
+
+    <div class="conditional" id="messageLibreWrap">
+      <div class="question">
+        <label>Écrivez le message comme s'il/elle vous parlait</label>
+        <textarea name="message_libre" class="large" placeholder="Mes chers enfants, si vous lisez ces mots c'est que le temps est venu pour moi de vous dire tout ce que je n'ai pas toujours su exprimer…"></textarea>
+        <div class="char-counter" id="messageCounter">0 caractères</div>
+      </div>
+    </div>
+
+    <div class="question">
+      <label>À qui s'adresse ce message ? <span class="required">*</span></label>
+      <input type="text" name="destinataire" placeholder="À ses enfants, à sa famille, à son/sa conjoint(e), à tous…" required>
+    </div>
+
+    <div class="question">
+      <label>Y a-t-il des choses non dites que vous aimeriez entendre de sa part ? <span class="optional">(optionnel)</span></label>
+      <textarea name="choses_non_dites" placeholder="Des mots qu'il/elle n'a pas eu le temps de dire, des sentiments qu'il/elle exprimait peu…"></textarea>
+    </div>
+
+    <div class="question">
+      <label>Quel ton doit avoir le message ? <span class="required">*</span></label>
+      <div class="radio-group horizontal">
+        <label class="radio-item"><input type="radio" name="ton_message" value="Apaisant et doux" required><span>Apaisant et doux</span></label>
+        <label class="radio-item"><input type="radio" name="ton_message" value="Joyeux et vivant"><span>Joyeux et vivant</span></label>
+        <label class="radio-item"><input type="radio" name="ton_message" value="Solennel et profond"><span>Solennel et profond</span></label>
+        <label class="radio-item"><input type="radio" name="ton_message" value="Mélange des deux"><span>Mélange des deux</span></label>
+      </div>
+    </div>
+
+    <div class="btn-nav">
+      <button type="button" class="btn btn-secondary" onclick="goToPage(3)">← Retour</button>
+      <button type="button" class="btn btn-primary" onclick="nextPage(4)">Continuer →</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════ -->
+<!-- PAGE 5 — PHOTOS -->
+<!-- ══════════════════════════════════════════════ -->
+<div class="page" id="page-5">
+  <div class="container">
+    <div class="page-eyebrow">05 / 10</div>
+    <div class="page-title">Les photos</div>
+    <div class="page-subtitle">Ce sont elles qui donneront vie à votre capsule. Plus elles sont nettes et expressives, plus le résultat sera émouvant.</div>
+    <div class="divider"></div>
+
+    <div class="notice">
+      <p><strong>Nombre de photos :</strong> jusqu'à <strong id="maxPhotosText">3 photos</strong> pour votre offre. Les photos de visage de face, avec un bon éclairage, donnent les meilleurs résultats. Nous pouvons aussi restaurer des photos anciennes abîmées.</p>
+    </div>
+
+    <div class="question">
+      <label>Envoyez vos photos <span class="required">*</span></label>
+      <div class="upload-zone" id="photosZone">
+        <input type="file" name="photos[]" id="photosInput" accept="image/*" multiple onchange="handlePhotoUpload(this)">
+        <svg class="upload-icon" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect x="4" y="8" width="32" height="24" rx="2" stroke="#1A2B4A" stroke-width="1.4"/>
+          <circle cx="20" cy="20" r="6" stroke="#C4A46B" stroke-width="1.2"/>
+          <circle cx="29" cy="13" r="2" fill="#C4A46B" opacity="0.5"/>
+        </svg>
+        <div class="upload-label">Glissez vos photos ici</div>
+        <div class="upload-hint">JPEG, PNG — jusqu'à 10 Mo par photo</div>
+      </div>
+      <div class="upload-files-list" id="photosList"></div>
+    </div>
+
+    <div class="question">
+      <label>Y a-t-il une photo principale — celle qui le/la représente le mieux ?</label>
+      <input type="text" name="photo_principale" placeholder="La première, la deuxième… ou décrivez-la (ex: photo de mariage, portrait souriant)">
+    </div>
+
+    <div class="question">
+      <label>Dans quel ordre souhaitez-vous les voir apparaître ? <span class="optional">(optionnel)</span></label>
+      <input type="text" name="ordre_photos" placeholder="Ex: photo 1 en premier, puis la plus ancienne en dernier…">
+    </div>
+
+    <div class="question">
+      <label>À quelle période de sa vie correspondent ces photos ?</label>
+      <input type="text" name="periode_photos" placeholder="Jeunesse, milieu de vie, les 10 dernières années…">
+    </div>
+
+    <div class="question">
+      <label>Y a-t-il des éléments sur les photos à éviter ou à mettre en valeur ? <span class="optional">(optionnel)</span></label>
+      <textarea name="elements_photos" placeholder="Ex: recadrer sur le visage, éviter le fond encombré, mettre en valeur son sourire…"></textarea>
+    </div>
+
+    <div class="btn-nav">
+      <button type="button" class="btn btn-secondary" onclick="goToPage(4)">← Retour</button>
+      <button type="button" class="btn btn-primary" onclick="nextPage(5)">Continuer →</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════ -->
+<!-- PAGE 6 — VOIX -->
+<!-- ══════════════════════════════════════════════ -->
+<div class="page" id="page-6">
+  <div class="container">
+    <div class="page-eyebrow">06 / 10</div>
+    <div class="page-title">Sa voix</div>
+    <div class="page-subtitle">La voix est ce qui rend la capsule profondément vivante. Même un court enregistrement suffit.</div>
+    <div class="divider"></div>
+
+    <div class="question">
+      <label>Avez-vous un enregistrement vocal ? <span class="required">*</span></label>
+      <div class="radio-group horizontal">
+        <label class="radio-item"><input type="radio" name="a_enregistrement" value="Oui" onchange="handleVoixChange()" required><span>Oui</span></label>
+        <label class="radio-item"><input type="radio" name="a_enregistrement" value="Non" onchange="handleVoixChange()"><span>Non</span></label>
+      </div>
+    </div>
+
+    <div class="conditional" id="voixOuiWrap">
+      <div class="question">
+        <label>Uploadez votre enregistrement vocal</label>
+        <div class="upload-zone">
+          <input type="file" name="enregistrement_vocal" accept="audio/*,video/*" onchange="handleAudioUpload(this)">
+          <svg class="upload-icon" viewBox="0 0 40 40" fill="none">
+            <ellipse cx="20" cy="16" rx="7" ry="10" stroke="#1A2B4A" stroke-width="1.4"/>
+            <path d="M11 19c0 5 4 9 9 9s9-4 9-9" stroke="#1A2B4A" stroke-width="1.4" stroke-linecap="round"/>
+            <line x1="20" y1="28" x2="20" y2="34" stroke="#C4A46B" stroke-width="1.4" stroke-linecap="round"/>
+          </svg>
+          <div class="upload-label">Message vocal, vidéo, répondeur…</div>
+          <div class="upload-hint">MP3, MP4, MOV, WAV, M4A — jusqu'à 50 Mo</div>
+        </div>
+        <div id="audioFileName" style="margin-top:10px; font-size:13px; color:var(--texte-light)"></div>
+      </div>
+      <div class="question">
+        <label>Durée approximative de l'enregistrement</label>
+        <div class="radio-group horizontal">
+          <label class="radio-item"><input type="radio" name="duree_enregistrement" value="Moins de 30 secondes"><span>Moins de 30 sec</span></label>
+          <label class="radio-item"><input type="radio" name="duree_enregistrement" value="30 sec à 2 min"><span>30 sec à 2 min</span></label>
+          <label class="radio-item"><input type="radio" name="duree_enregistrement" value="Plus de 2 min"><span>Plus de 2 min</span></label>
+        </div>
+      </div>
+    </div>
+
+    <div class="conditional" id="voixNonWrap">
+      <div class="notice">
+        <p>Pas d'inquiétude — nous pouvons utiliser une voix de synthèse très proche. Aidez-nous à vous en approcher au maximum.</p>
+      </div>
+      <div class="question">
+        <label>Décrivez sa voix</label>
+        <div class="radio-group horizontal">
+          <label class="radio-item"><input type="radio" name="description_voix" value="Grave et profonde"><span>Grave et profonde</span></label>
+          <label class="radio-item"><input type="radio" name="description_voix" value="Douce et légère"><span>Douce et légère</span></label>
+          <label class="radio-item"><input type="radio" name="description_voix" value="Énergique et vive"><span>Énergique et vive</span></label>
+          <label class="radio-item"><input type="radio" name="description_voix" value="Posée et calme"><span>Posée et calme</span></label>
+        </div>
+      </div>
+      <div class="question">
+        <label>Avait-il/elle un accent régional ou particulier ? <span class="optional">(optionnel)</span></label>
+        <input type="text" name="accent" placeholder="Accent du Sud, Breton, Alsacien, Belge…">
+      </div>
+    </div>
+
+    <div class="question">
+      <label>Quelle langue pour le message ? <span class="required">*</span></label>
+      <div class="radio-group horizontal">
+        <label class="radio-item"><input type="radio" name="langue" value="Français" required><span>Français</span></label>
+        <label class="radio-item"><input type="radio" name="langue" value="Autre"><span>Autre</span></label>
+      </div>
+      <div class="conditional" id="langueAutreWrap" style="margin-top:12px">
+        <input type="text" name="langue_autre" placeholder="Précisez la langue…">
+      </div>
+    </div>
+
+    <div class="btn-nav">
+      <button type="button" class="btn btn-secondary" onclick="goToPage(5)">← Retour</button>
+      <button type="button" class="btn btn-primary" onclick="nextPage(6)">Continuer →</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════ -->
+<!-- PAGE 7 — AMBIANCE VIDÉO -->
+<!-- ══════════════════════════════════════════════ -->
+<div class="page" id="page-7">
+  <div class="container">
+    <div class="page-eyebrow">07 / 10</div>
+    <div class="page-title">L'ambiance</div>
+    <div class="page-subtitle">Chaque capsule a son atmosphère. Aidez-nous à trouver la vôtre.</div>
+    <div class="divider"></div>
+
+    <div class="question">
+      <label>Quelle ambiance souhaitez-vous pour la vidéo ? <span class="required">*</span></label>
+      <div class="radio-group">
+        <label class="radio-item"><input type="radio" name="ambiance" value="Douce et apaisante" required><span>Douce et apaisante — lumière tamisée, musique calme, tons chauds</span></label>
+        <label class="radio-item"><input type="radio" name="ambiance" value="Joyeuse et lumineuse"><span>Joyeuse et lumineuse — lumière naturelle, musique vive, couleurs claires</span></label>
+        <label class="radio-item"><input type="radio" name="ambiance" value="Sobre et recueillie"><span>Sobre et recueillie — noir et blanc, silence, profondeur</span></label>
+        <label class="radio-item"><input type="radio" name="ambiance" value="Mélange équilibré"><span>Mélange équilibré — commencez par la douceur, finissez dans la lumière</span></label>
+      </div>
+    </div>
+
+    <div class="question">
+      <label>Y a-t-il une musique qu'il/elle aimait particulièrement ? <span class="optional">(optionnel)</span></label>
+      <input type="text" name="musique_preferee" placeholder="Un artiste, une chanson, un morceau de musique classique…">
+    </div>
+
+    <div class="question">
+      <label>Sinon, quel style musical correspond à son caractère ?</label>
+      <div class="radio-group horizontal">
+        <label class="radio-item"><input type="radio" name="style_musical" value="Classique"><span>Classique</span></label>
+        <label class="radio-item"><input type="radio" name="style_musical" value="Jazz"><span>Jazz</span></label>
+        <label class="radio-item"><input type="radio" name="style_musical" value="Chanson française"><span>Chanson française</span></label>
+        <label class="radio-item"><input type="radio" name="style_musical" value="Musique douce / ambient"><span>Musique douce</span></label>
+        <label class="radio-item"><input type="radio" name="style_musical" value="Sans musique / silence"><span>Sans musique</span></label>
+        <label class="radio-item"><input type="radio" name="style_musical" value="Autre"><span>Autre</span></label>
+      </div>
+    </div>
+
+    <div class="question">
+      <label>Des couleurs, ambiances visuelles qui lui correspondent ? <span class="optional">(optionnel)</span></label>
+      <textarea name="ambiance_visuelle" placeholder="Nature, mer, forêt, montagne, ville, campagne, intérieur cosy… Ses couleurs préférées, les lieux qui lui ressemblaient…"></textarea>
+    </div>
+
+    <div class="question">
+      <label>Y a-t-il des éléments à éviter absolument dans la vidéo ? <span class="optional">(optionnel)</span></label>
+      <textarea name="elements_eviter" placeholder="Certaines images, certains sons, certaines ambiances qui pourraient être douloureuses ou inappropriées…"></textarea>
+    </div>
+
+    <div class="btn-nav">
+      <button type="button" class="btn btn-secondary" onclick="goToPage(6)">← Retour</button>
+      <button type="button" class="btn btn-primary" onclick="nextPage(7)">Continuer →</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════ -->
+<!-- PAGE 8 — LIVRE DE VIE (Offre 2 uniquement) -->
+<!-- ══════════════════════════════════════════════ -->
+<div class="page" id="page-8">
+  <div class="container">
+    <div class="page-eyebrow">08 / 10</div>
+    <div class="page-title">Le livre de vie</div>
+    <div class="page-subtitle">Ce livre est son héritage écrit — une biographie illustrée que les générations futures pourront tenir entre leurs mains.</div>
+    <div class="divider"></div>
+
+    <div class="question">
+      <label>Racontez-nous son histoire — depuis le début <span class="required">*</span></label>
+      <textarea name="histoire_vie" class="large" placeholder="Enfance, famille d'origine, les grandes étapes de sa vie, ses choix, ses épreuves, ses bonheurs… Tout ce qui fait qui il/elle était." required></textarea>
+    </div>
+
+    <div class="question">
+      <label>Les 5 moments les plus importants de sa vie selon vous <span class="required">*</span></label>
+      <textarea name="moments_importants" class="large" placeholder="1. Sa rencontre avec votre père/mère…&#10;2. La naissance de ses enfants…&#10;3. …" required></textarea>
+    </div>
+
+    <div class="question">
+      <label>Ses relations les plus importantes — qui comptait vraiment pour lui/elle ?</label>
+      <textarea name="relations_importantes" placeholder="Son/sa conjoint(e), ses enfants, un ami de toujours, un mentor, un parent disparu…"></textarea>
+    </div>
+
+    <div class="question">
+      <label>Ce qu'il/elle aurait voulu dire à chacun <span class="optional">(optionnel)</span></label>
+      <textarea name="mots_pour_chacun" placeholder="À sa fille : …&#10;À son fils : …&#10;À son/sa conjoint(e) : …"></textarea>
+    </div>
+
+    <div class="question">
+      <label>Ce que vous voulez que les générations futures retiennent de lui/elle <span class="required">*</span></label>
+      <textarea name="message_generations" placeholder="Son héritage, sa façon d'être, les valeurs qu'il/elle vous a transmises et que vous souhaitez transmettre à votre tour…" required></textarea>
+    </div>
+
+    <div class="question">
+      <label>Documents supplémentaires <span class="optional">(optionnel)</span></label>
+      <div class="upload-zone">
+        <input type="file" name="documents[]" accept=".pdf,.doc,.docx,.txt,.jpg,.png" multiple onchange="handleDocsUpload(this)">
+        <svg class="upload-icon" viewBox="0 0 40 40" fill="none">
+          <path d="M20 8v26" stroke="#C4A46B" stroke-width="0.9" stroke-linecap="round"/>
+          <path d="M7 10h13v22H7a1 1 0 01-1-1V11a1 1 0 011-1z" stroke="#1A2B4A" stroke-width="1.4"/>
+          <path d="M20 10h13a1 1 0 011 1v20a1 1 0 01-1 1H20V10z" stroke="#1A2B4A" stroke-width="1.4"/>
+        </svg>
+        <div class="upload-label">Lettres, textes, poèmes…</div>
+        <div class="upload-hint">PDF, Word, images — tout document personnel écrit par lui/elle ou qui le/la décrit</div>
+      </div>
+      <div class="upload-files-list" id="docsList"></div>
+    </div>
+
+    <div class="btn-nav">
+      <button type="button" class="btn btn-secondary" onclick="goToPage(7)">← Retour</button>
+      <button type="button" class="btn btn-primary" onclick="nextPage(8)">Continuer →</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════ -->
+<!-- PAGE 9 — LIVRAISON & DÉTAILS FINAUX -->
+<!-- ══════════════════════════════════════════════ -->
+<div class="page" id="page-9">
+  <div class="container">
+    <div class="page-eyebrow">09 / 10</div>
+    <div class="page-title">Les derniers détails</div>
+    <div class="divider"></div>
+
+    <div class="question">
+      <label>Y a-t-il une occasion particulière pour cette capsule ? <span class="optional">(optionnel)</span></label>
+      <div class="radio-group horizontal">
+        <label class="radio-item"><input type="radio" name="occasion" value="Anniversaire de décès"><span>Anniversaire de décès</span></label>
+        <label class="radio-item"><input type="radio" name="occasion" value="Cérémonie / enterrement"><span>Cérémonie</span></label>
+        <label class="radio-item"><input type="radio" name="occasion" value="Noël / fêtes"><span>Noël / fêtes</span></label>
+        <label class="radio-item"><input type="radio" name="occasion" value="Garder une trace"><span>Garder une trace</span></label>
+        <label class="radio-item"><input type="radio" name="occasion" value="Autre"><span>Autre</span></label>
+      </div>
+    </div>
+
+    <div class="question">
+      <label>Souhaitez-vous la capsule avant une date précise ? <span class="optional">(optionnel)</span></label>
+      <input type="date" name="date_souhaitee">
+    </div>
+
+    <div class="question">
+      <label>Souhaitez-vous une dédicace au début de la vidéo ? <span class="optional">(optionnel)</span></label>
+      <input type="text" name="dedicace" placeholder="Ex : &quot;Pour toi Papa, de tes enfants qui t'aiment pour toujours.&quot;">
+    </div>
+
+    <div class="question">
+      <label>Avez-vous des demandes particulières ou des précisions à nous donner ? <span class="optional">(optionnel)</span></label>
+      <textarea name="demandes_particulieres" placeholder="Toute information complémentaire qui pourrait nous aider à créer la capsule la plus fidèle possible…"></textarea>
+    </div>
+
+    <div class="question">
+      <label>Comment avez-vous entendu parler de Capsule Mémoire ? <span class="optional">(optionnel)</span></label>
+      <select name="source">
+        <option value="">Choisissez…</option>
+        <option>Recommandation d'un proche</option>
+        <option>Pompes funèbres</option>
+        <option>Association de deuil</option>
+        <option>Psychologue / thérapeute</option>
+        <option>Réseaux sociaux</option>
+        <option>Notaire</option>
+        <option>Recherche internet</option>
+        <option>Autre</option>
+      </select>
+    </div>
+
+    <div class="btn-nav">
+      <button type="button" class="btn btn-secondary" onclick="goBack9()">← Retour</button>
+      <button type="button" class="btn btn-primary" onclick="nextPage(9)">Continuer →</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════ -->
+<!-- PAGE 10 — RÉCAPITULATIF & ENVOI -->
+<!-- ══════════════════════════════════════════════ -->
+<div class="page" id="page-10">
+  <div class="container">
+    <div class="page-eyebrow">10 / 10</div>
+    <div class="page-title">Votre récapitulatif</div>
+    <div class="page-subtitle">Avant d'envoyer, vérifiez que tout est complet. Vous pouvez revenir en arrière à tout moment.</div>
+    <div class="divider"></div>
+
+    <div id="recap" style="margin-bottom: 48px;"></div>
+
+    <div class="notice">
+      <p><strong>Confidentialité totale.</strong> Toutes vos informations et vos fichiers sont traités de façon strictement confidentielle, utilisés uniquement pour la création de votre capsule, puis supprimés après livraison.</p>
+    </div>
+
+    <div style="text-align: center; margin-top: 40px;">
+      <button type="submit" class="btn btn-submit">
+        Envoyer mon questionnaire →
+      </button>
+      <div style="margin-top: 16px; font-size: 12px; color: var(--texte-light); letter-spacing: 0.05em;">
+        Vous recevrez une confirmation par email · Livraison sous 72h ou 5 jours selon votre offre
+      </div>
+    </div>
+
+    <div class="btn-nav" style="justify-content: flex-start;">
+      <button type="button" class="btn btn-secondary" onclick="goToPage(9)">← Modifier mes réponses</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════ -->
+<!-- PAGE 11 — CONFIRMATION -->
+<!-- ══════════════════════════════════════════════ -->
+<div class="page" id="page-11">
+  <div class="confirmation-page">
+    <div class="confirmation-icon">
+      <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
+        <circle cx="16" cy="16" r="14" stroke="#C4A46B" stroke-width="1.2"/>
+        <path d="M10 16.5l4 4 8-8" stroke="#C4A46B" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </div>
+    <div class="confirmation-title">
+      Merci.<br>
+      <span style="font-style:italic; color: var(--or);">Nous allons en prendre soin.</span>
+    </div>
+    <div class="confirmation-text">
+      Votre questionnaire a bien été reçu. Nous allons créer votre capsule avec tout le soin et le respect qu'elle mérite.
+    </div>
+    <div class="confirmation-steps">
+      <div class="confirmation-step">
+        <div class="step-num">1</div>
+        <div class="step-text">Nous analysons vos réponses et vos fichiers dans les prochaines heures.</div>
+      </div>
+      <div class="confirmation-step">
+        <div class="step-num">2</div>
+        <div class="step-text">Si nous avons besoin d'une précision, nous vous contactons par email.</div>
+      </div>
+      <div class="confirmation-step">
+        <div class="step-num">3</div>
+        <div class="step-text">Vous recevrez votre capsule par lien privé sécurisé dans les délais convenus.</div>
+      </div>
+    </div>
+    <div style="font-family: 'Cormorant Garamond', serif; font-style: italic; font-size: 18px; color: var(--texte-light);">
+      "Un souvenir qui dure toute une vie."
+    </div>
+  </div>
+</div>
+
+</form>
+
+<script>
+  // ── STATE ──
+  let currentPage = 0;
+  const TOTAL_PAGES = 11; // 0 = welcome, 11 = confirmation
+  let isOffre2 = false;
+
+  // ── NAVIGATION ──
+  function goToPage(n) {
+    document.querySelector('.page.active')?.classList.remove('active');
+    document.getElementById('page-' + n)?.classList.add('active');
+    currentPage = n;
+    updateProgress();
+    updateHeader();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  function nextPage(from) {
+    if (!validatePage(from)) return;
+
+    // Skip page 8 (Livre de vie) if Offre 1
+    if (from === 7 && !isOffre2) {
+      goToPage(9);
+      return;
+    }
+    if (from === 9) {
+      buildRecap();
+      goToPage(10);
+      return;
+    }
+    goToPage(from + 1);
+  }
+
+  function goBack9() {
+    if (isOffre2) { goToPage(8); }
+    else { goToPage(7); }
+  }
+
+  // ── PROGRESS ──
+  function updateProgress() {
+    const steps = [0,1,2,3,4,5,6,7,8,9,10,11];
+    const activeSteps = isOffre2 ? 12 : 11; // pages 0-11 or skip 8
+    const pct = currentPage === 0 ? 0 : Math.round((currentPage / 10) * 100);
+    document.getElementById('progressBar').style.width = pct + '%';
+  }
+
+  function updateHeader() {
+    if (currentPage === 0 || currentPage === 11) {
+      document.getElementById('headerStep').textContent = 'Questionnaire personnalisé';
+      document.getElementById('stepDots').innerHTML = '';
+      return;
+    }
+    const labels = ['','Commande','Votre proche','Son histoire','Le message','Photos','La voix','Ambiance','Livre de vie','Détails','Récapitulatif'];
+    document.getElementById('headerStep').textContent = labels[currentPage] || '';
+
+    // Dots
+    const totalDots = isOffre2 ? 10 : 9;
+    const dots = document.getElementById('stepDots');
+    dots.innerHTML = '';
+    for (let i = 1; i <= totalDots; i++) {
+      const d = document.createElement('div');
+      d.className = 'step-dot';
+      const pageNum = isOffre2 ? i : (i >= 8 ? i + 1 : i);
+      if (pageNum < currentPage) d.classList.add('done');
+      if (pageNum === currentPage) d.classList.add('active');
+      dots.appendChild(d);
+    }
+  }
+
+  // ── OFFRE CHANGE ──
+  function handleOffreChange() {
+    const val = document.querySelector('input[name="offre"]:checked')?.value || '';
+    isOffre2 = val.includes('990');
+    const maxText = document.getElementById('maxPhotosText');
+    if (maxText) maxText.textContent = isOffre2 ? '10 photos' : '3 photos';
+    const photosInput = document.getElementById('photosInput');
+    if (photosInput) photosInput.setAttribute('max', isOffre2 ? '10' : '3');
+
+    // Style selected radio
+    document.querySelectorAll('#offreGroup .radio-item').forEach(el => {
+      el.classList.remove('selected');
+      if (el.querySelector('input').checked) el.classList.add('selected');
+    });
+  }
+
+  // ── MESSAGE TYPE ──
+  function handleMessageType() {
+    const val = document.querySelector('input[name="type_message"]:checked')?.value || '';
+    const wrap = document.getElementById('messageLibreWrap');
+    if (val === 'Je veux écrire le message moi-même') {
+      wrap.classList.add('visible');
+    } else {
+      wrap.classList.remove('visible');
+    }
+    document.querySelectorAll('#messageTypeGroup .radio-item').forEach(el => {
+      el.classList.remove('selected');
+      if (el.querySelector('input').checked) el.classList.add('selected');
+    });
+  }
+
+  // ── VOIX ──
+  function handleVoixChange() {
+    const val = document.querySelector('input[name="a_enregistrement"]:checked')?.value;
+    document.getElementById('voixOuiWrap').classList.toggle('visible', val === 'Oui');
+    document.getElementById('voixNonWrap').classList.toggle('visible', val === 'Non');
+    document.querySelectorAll('input[name="a_enregistrement"]').forEach(el => {
+      el.closest('.radio-item').classList.toggle('selected', el.checked);
+    });
+  }
+
+  // ── LANGUE ──
+  document.querySelectorAll('input[name="langue"]').forEach(el => {
+    el.addEventListener('change', () => {
+      document.getElementById('langueAutreWrap').classList.toggle('visible', el.value === 'Autre' && el.checked);
+    });
+  });
+
+  // ── RADIO STYLE HELPERS ──
+  document.addEventListener('change', function(e) {
+    if (e.target.type === 'radio') {
+      const group = e.target.closest('.radio-group');
+      if (group) {
+        group.querySelectorAll('.radio-item').forEach(item => {
+          item.classList.toggle('selected', item.querySelector('input').checked);
+        });
+      }
+    }
+    if (e.target.type === 'checkbox') {
+      e.target.closest('.checkbox-item')?.classList.toggle('selected', e.target.checked);
+    }
+  });
+
+  // ── FILE UPLOADS ──
+  function handlePhotoUpload(input) {
+    const list = document.getElementById('photosList');
+    list.innerHTML = '';
+    Array.from(input.files).forEach(f => {
+      const item = document.createElement('div');
+      item.className = 'upload-file-item';
+      item.innerHTML = `<span class="file-icon">🖼</span> ${f.name} <span style="color:var(--texte-light);font-size:12px;margin-left:auto">${(f.size/1024/1024).toFixed(1)} Mo</span>`;
+      list.appendChild(item);
+    });
+  }
+
+  function handleAudioUpload(input) {
+    const f = input.files[0];
+    if (f) {
+      document.getElementById('audioFileName').textContent = '✓ ' + f.name + ' (' + (f.size/1024/1024).toFixed(1) + ' Mo)';
+    }
+  }
+
+  function handleDocsUpload(input) {
+    const list = document.getElementById('docsList');
+    list.innerHTML = '';
+    Array.from(input.files).forEach(f => {
+      const item = document.createElement('div');
+      item.className = 'upload-file-item';
+      item.innerHTML = `<span class="file-icon">📄</span> ${f.name}`;
+      list.appendChild(item);
+    });
+  }
+
+  // ── CHAR COUNTER ──
+  const msgTextarea = document.querySelector('textarea[name="message_libre"]');
+  if (msgTextarea) {
+    msgTextarea.addEventListener('input', function() {
+      document.getElementById('messageCounter').textContent = this.value.length + ' caractères';
+    });
+  }
+
+  // ── VALIDATION ──
+  function validatePage(pageNum) {
+    const page = document.getElementById('page-' + pageNum);
+    let valid = true;
+
+    // Clear previous errors
+    page.querySelectorAll('.question.has-error').forEach(q => q.classList.remove('has-error'));
+
+    // Check required fields
+    page.querySelectorAll('[required]').forEach(field => {
+      const q = field.closest('.question');
+      if (!field.value.trim()) {
+        q?.classList.add('has-error');
+        if (q && !q.querySelector('.error-msg')) {
+          const err = document.createElement('div');
+          err.className = 'error-msg';
+          err.textContent = 'Ce champ est requis.';
+          q.appendChild(err);
+        }
+        valid = false;
+      }
+    });
+
+    // Check required radio groups
+    page.querySelectorAll('.radio-group').forEach(group => {
+      const radios = group.querySelectorAll('input[type="radio"]');
+      const hasRequired = Array.from(radios).some(r => r.required);
+      const hasChecked = Array.from(radios).some(r => r.checked);
+      if (hasRequired && !hasChecked) {
+        const q = group.closest('.question');
+        q?.classList.add('has-error');
+        if (q && !q.querySelector('.error-msg')) {
+          const err = document.createElement('div');
+          err.className = 'error-msg';
+          err.textContent = 'Veuillez faire un choix.';
+          q.appendChild(err);
+        }
+        valid = false;
+      }
+    });
+
+    if (!valid) {
+      const firstError = page.querySelector('.question.has-error');
+      firstError?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+
+    return valid;
+  }
+
+  // ── RECAP ──
+  function buildRecap() {
+    const recap = document.getElementById('recap');
+    const form = document.getElementById('mainForm');
+    const data = new FormData(form);
+    let html = '';
+
+    const sections = [
+      { title: 'Votre commande', fields: ['offre', 'client_nom', 'client_email', 'lien_defunt'] },
+      { title: 'Votre proche', fields: ['defunt_prenom', 'defunt_nom', 'defunt_3mots'] },
+      { title: 'Le message', fields: ['type_message', 'destinataire', 'ton_message'] },
+      { title: 'La voix', fields: ['a_enregistrement', 'langue'] },
+      { title: 'L\'ambiance', fields: ['ambiance'] },
+      { title: 'Détails', fields: ['occasion', 'dedicace'] },
+    ];
+
+    const labels = {
+      offre: 'Offre choisie', client_nom: 'Nom', client_email: 'Email', lien_defunt: 'Lien',
+      defunt_prenom: 'Prénom', defunt_nom: 'Nom', defunt_3mots: 'En 3 mots',
+      type_message: 'Type de message', destinataire: 'Destinataire', ton_message: 'Ton',
+      a_enregistrement: 'Enregistrement vocal', langue: 'Langue',
+      ambiance: 'Ambiance souhaitée', occasion: 'Occasion', dedicace: 'Dédicace'
+    };
+
+    sections.forEach(sec => {
+      const rows = sec.fields.map(f => {
+        const v = data.get(f);
+        if (!v) return '';
+        return `<div style="display:flex;gap:16px;padding:10px 0;border-bottom:1px solid var(--beige)">
+          <div style="flex:0 0 160px;font-size:12px;color:var(--texte-light);letter-spacing:0.05em">${labels[f] || f}</div>
+          <div style="font-size:14px;color:var(--texte)">${v}</div>
+        </div>`;
+      }).join('');
+      if (rows.replace(/\s/g,'')) {
+        html += `<div style="margin-bottom:28px">
+          <div style="font-family:'DM Sans';font-size:10px;letter-spacing:0.28em;text-transform:uppercase;color:var(--or);padding-bottom:10px;margin-bottom:2px">${sec.title}</div>
+          ${rows}
+        </div>`;
+      }
+    });
+
+    recap.innerHTML = html;
+  }
+
+  // ── FORM SUBMIT ──
+  document.getElementById('mainForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    // Here you would normally submit — for now show confirmation
+    // If using Formspree, remove e.preventDefault() and let it submit naturally
+    // then redirect to page 11 via Formspree's redirect setting
+    goToPage(11);
+  });
+
+  // ── INIT ──
+  updateProgress();
+  updateHeader();
+</script>
+</body>
+</html>
