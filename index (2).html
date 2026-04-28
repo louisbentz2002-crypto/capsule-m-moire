@@ -1,0 +1,633 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Capsule Mémoire — Préserver l'essentiel</title>
+  <template id="__bundler_thumbnail">
+    <svg viewBox="0 0 120 80" xmlns="http://www.w3.org/2000/svg">
+      <rect width="120" height="80" fill="#1A2B4A"/>
+      <ellipse cx="60" cy="40" rx="32" ry="15" stroke="#C4A46B" stroke-width="1.2" fill="none"/>
+      <ellipse cx="60" cy="40" rx="20" ry="9" stroke="#C4A46B" stroke-width="0.6" fill="none" stroke-dasharray="2 3" opacity="0.6"/>
+      <circle cx="60" cy="40" r="2.5" fill="#C4A46B"/>
+    </svg>
+  </template>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400;1,500&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500&display=swap" rel="stylesheet">
+  <script async src="https://js.stripe.com/v3/buy-button.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --navy:     #0D1829;
+      --navy-mid: #1A2B4A;
+      --beige:    #F0EAE0;
+      --or:       #C4A46B;
+      --or-l:     #D4B98A;
+      --blanc:    #FAF8F5;
+      --texte:    #2D3748;
+      --muted:    #7A8BAA;
+    }
+    html { scroll-behavior: smooth; }
+    body { background: var(--blanc); color: var(--texte); font-family: 'DM Sans', sans-serif; font-weight: 300; cursor: none; overflow-x: hidden; }
+    a { text-decoration: none; color: inherit; }
+
+
+    /* CURSOR */
+    .cur-ring { position: fixed; width: 28px; height: 28px; border: 1.2px solid var(--or); border-radius: 50%; pointer-events: none; z-index: 9999; transform: translate(-50%,-50%); transition: width .25s, height .25s; }
+    .cur-dot  { position: fixed; width: 5px; height: 5px; background: var(--or); border-radius: 50%; pointer-events: none; z-index: 9999; transform: translate(-50%,-50%); }
+
+    /* LOADER */
+    #loader { position: fixed; inset: 0; z-index: 9995; background: var(--navy); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 28px; transition: opacity .7s, visibility .7s; }
+    #loader.out { opacity: 0; visibility: hidden; pointer-events: none; }
+    .ld-icon { animation: ldglow 1.8s ease-in-out infinite; }
+    @keyframes ldglow { 0%,100%{filter:drop-shadow(0 0 8px rgba(196,164,107,.3))} 50%{filter:drop-shadow(0 0 24px rgba(196,164,107,.7))} }
+    .ld-bar { width: 120px; height: 1px; background: rgba(196,164,107,.2); border-radius:1px; overflow:hidden; }
+    .ld-bar-fill { height:100%; width:0; background:var(--or); animation: ldfill 1.6s ease forwards; }
+    @keyframes ldfill { to { width:100%; } }
+    .ld-txt { font-size:9px; letter-spacing:.32em; text-transform:uppercase; color:rgba(240,234,224,.3); }
+
+    /* NAV */
+    nav { position: fixed; top: 0; left: 0; right: 0; z-index: 900; height: 76px; padding: 0 60px; display: flex; align-items: center; justify-content: space-between; gap: 32px; transition: background .4s, box-shadow .4s; }
+    nav.on { background: rgba(10,18,34,.95); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); box-shadow: 0 1px 0 rgba(196,164,107,.12); }
+    .n-logo { display: flex; align-items: center; gap: 13px; flex-shrink: 0; }
+    .n-logo-txt { font-family: 'Cormorant Garamond', serif; font-weight: 300; font-size: 15px; letter-spacing: .22em; text-transform: uppercase; color: var(--blanc); white-space: nowrap; }
+    .n-logo-txt b { color: var(--or); font-weight: 500; letter-spacing: .28em; }
+    .n-links { display: flex; align-items: center; gap: 36px; flex: 1; justify-content: center; }
+    .n-links a { font-size: 10px; letter-spacing: .2em; text-transform: uppercase; color: rgba(240,234,224,.45); transition: color .2s; white-space: nowrap; }
+    .n-links a:hover { color: var(--or); }
+    .n-cta { flex-shrink: 0; }
+    .btn-or { display: inline-block; background: var(--or); color: var(--navy); font-family: 'DM Sans', sans-serif; font-weight: 500; font-size: 10px; letter-spacing: .18em; text-transform: uppercase; padding: 12px 26px; border-radius: 2px; border: none; cursor: none; transition: background .2s, transform .15s; white-space: nowrap; }
+    .btn-or:hover { background: var(--or-l); }
+    .btn-ghost { display: inline-block; border: 1px solid rgba(196,164,107,.45); color: rgba(240,234,224,.65); font-family: 'DM Sans', sans-serif; font-weight: 300; font-size: 10px; letter-spacing: .2em; text-transform: uppercase; padding: 12px 28px; border-radius: 2px; cursor: none; transition: border-color .2s, color .2s; white-space: nowrap; }
+    .btn-ghost:hover { border-color: var(--or); color: var(--or); }
+
+    /* REVEAL */
+    .rv { opacity: 0; transform: translateY(28px); transition: opacity .85s cubic-bezier(.16,1,.3,1), transform .85s cubic-bezier(.16,1,.3,1); }
+    .rv.in { opacity: 1; transform: none; }
+    .d1{transition-delay:.1s} .d2{transition-delay:.22s} .d3{transition-delay:.34s} .d4{transition-delay:.46s} .d5{transition-delay:.58s}
+
+    /* HERO */
+    #hero { min-height: 100vh; background: linear-gradient(160deg, var(--navy-mid) 0%, var(--navy) 100%); display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; position: relative; overflow: hidden; padding: 120px 40px 100px; gap: 0; }
+    .h-glow1 { position:absolute; width:800px; height:800px; background:radial-gradient(circle,rgba(196,164,107,.1) 0%,transparent 62%); border-radius:50%; top:50%; left:50%; transform:translate(-50%,-50%); animation:hpulse 5s ease-in-out infinite; pointer-events:none; }
+    .h-glow2 { position:absolute; width:400px; height:400px; background:radial-gradient(circle,rgba(196,164,107,.08) 0%,transparent 65%); border-radius:50%; top:50%; left:50%; transform:translate(-50%,-50%); animation:hpulse 3.5s ease-in-out infinite reverse; pointer-events:none; }
+    @keyframes hpulse { 0%,100%{opacity:.5;transform:translate(-50%,-50%) scale(1)} 50%{opacity:1;transform:translate(-50%,-50%) scale(1.1)} }
+    .h-eyebrow { font-size: 9px; letter-spacing: .38em; text-transform: uppercase; color: var(--or); margin-bottom: 24px; position:relative; z-index:1; }
+    .h-title { font-family: 'Cormorant Garamond', serif; font-weight: 300; font-size: clamp(60px, 9vw, 108px); line-height: 1; color: var(--blanc); position:relative; z-index:1; margin-bottom: 24px; }
+    .h-title em { font-style: italic; color: var(--or); }
+    .h-sub { font-family: 'Cormorant Garamond', serif; font-style: italic; font-weight: 300; font-size: clamp(17px, 2vw, 24px); color: rgba(240,234,224,.52); max-width: 520px; line-height: 1.5; margin-bottom: 40px; position:relative; z-index:1; margin-bottom: 20px; }
+    .h-tagline { font-size: 9px; letter-spacing: .38em; text-transform: uppercase; color: rgba(196,164,107,.45); position:relative; z-index:1; margin-bottom: 52px; }
+    .h-btns { display:flex; gap:16px; align-items:center; position:relative; z-index:1; flex-wrap:wrap; justify-content:center; margin-bottom: 80px; }
+    /* Hero reveals — no translateY since loader covers initial render */
+    #hero .rv { transform: none; }
+    #hero .rv.in { opacity: 1; }
+    .h-scroll { position:absolute; bottom:32px; left:50%; transform:translateX(-50%); display:flex; flex-direction:column; align-items:center; gap:10px; font-size:8px; letter-spacing:.28em; text-transform:uppercase; color:rgba(240,234,224,.22); animation:scpulse 2s ease-in-out infinite; }
+    @keyframes scpulse { 0%,100%{opacity:.22} 50%{opacity:.6} }
+
+    /* PHILOSOPHIE */
+    #philosophie { background: var(--beige); padding: 120px 56px; }
+    #philosophie .inner { max-width:1200px; margin:0 auto; display:grid; grid-template-columns:1fr 1fr; gap:96px; align-items:center; }
+    .philo-body { font-size: 15px; color: var(--muted); line-height: 1.85; }
+    .philo-body p + p { margin-top: 20px; }
+    .philo-right { position:relative; padding-left: 52px; }
+    .philo-right::before { content:''; position:absolute; left:0; top:0; bottom:0; width:1px; background:linear-gradient(to bottom,transparent,var(--or),transparent); }
+    .philo-cit { font-family:'Cormorant Garamond',serif; font-style:italic; font-weight:300; font-size:clamp(26px,3vw,40px); color:var(--navy-mid); line-height:1.25; margin-bottom:24px; }
+    .philo-cit span { color:var(--or); }
+    .philo-sig { font-size:10px; letter-spacing:.22em; text-transform:uppercase; color:var(--muted); }
+
+    /* PRESTATIONS */
+    #prestations { background: var(--blanc); padding: 120px 56px; }
+    #prestations .inner { max-width:1200px; margin:0 auto; }
+    .hdr { margin-bottom:64px; }
+    .sec-lbl { font-size:9px; letter-spacing:.35em; text-transform:uppercase; color:var(--or); margin-bottom:16px; }
+    .sec-ttl { font-family:'Cormorant Garamond',serif; font-weight:300; font-size:clamp(34px,4vw,52px); color:var(--navy-mid); line-height:1.1; margin-bottom:0; }
+    .sec-ttl em { font-style:italic; color:var(--or); font-weight:300; }
+    .cards { display:grid; grid-template-columns:repeat(3,1fr); gap:24px; }
+    .card { background:var(--beige); border-radius:2px; padding:48px 40px 40px; position:relative; overflow:hidden; transition:transform .35s cubic-bezier(.16,1,.3,1), box-shadow .35s; border:1px solid rgba(196,164,107,.1); }
+    .card::before { content:''; position:absolute; top:0; left:0; right:0; height:2px; background:linear-gradient(to right,var(--or),var(--or-l)); transform:scaleX(0); transform-origin:left; transition:transform .45s cubic-bezier(.16,1,.3,1); }
+    .card:hover::before { transform:scaleX(1); }
+    .card:hover { transform:translateY(-6px); box-shadow:0 24px 56px rgba(13,24,41,.1); }
+    .card-ico { margin-bottom:28px; }
+    .card-ttl { font-family:'Cormorant Garamond',serif; font-weight:500; font-size:24px; color:var(--navy-mid); margin-bottom:12px; letter-spacing:.02em; }
+    .card-desc { font-size:13px; color:var(--muted); line-height:1.8; margin-bottom:28px; }
+    .badge { display:inline-block; border:1px solid rgba(196,164,107,.35); color:var(--or); font-size:9px; letter-spacing:.22em; text-transform:uppercase; padding:6px 13px; border-radius:1px; }
+
+    /* PROCESSUS */
+    #processus { background: var(--navy-mid); padding: 120px 56px; }
+    #processus .inner { max-width:1200px; margin:0 auto; }
+    #processus .sec-ttl { color:var(--blanc); }
+    #processus .sec-lbl { color:var(--or); }
+    .proc-track { position:relative; display:grid; grid-template-columns:repeat(4,1fr); gap:40px; margin-top:72px; }
+    .proc-track::before { content:''; position:absolute; top:20px; left:calc(12.5%); right:calc(12.5%); height:1px; background:linear-gradient(to right,var(--or),rgba(196,164,107,.2)); }
+    .proc-step { position:relative; padding-top:0; }
+    .proc-num-wrap { display:flex; align-items:center; margin-bottom:28px; }
+    .proc-num { width:42px; height:42px; border:1px solid var(--or); border-radius:50%; display:flex; align-items:center; justify-content:center; font-family:'Cormorant Garamond',serif; font-weight:300; font-size:18px; color:var(--or); background:var(--navy-mid); position:relative; z-index:1; flex-shrink:0; }
+    .proc-ttl { font-family:'Cormorant Garamond',serif; font-weight:500; font-size:18px; color:var(--blanc); margin-bottom:10px; }
+    .proc-desc { font-size:13px; color:rgba(240,234,224,.5); line-height:1.75; }
+
+    /* TÉMOIGNAGES */
+    #temoignages { background: var(--beige); padding: 120px 56px; }
+    #temoignages .inner { max-width:1200px; margin:0 auto; }
+    .temo-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:24px; }
+    .temo-card { background:var(--blanc); border-radius:2px; padding:40px; border:1px solid rgba(196,164,107,.1); }
+    .temo-mark { font-family:'Cormorant Garamond',serif; font-size:72px; color:var(--or); line-height:.6; display:block; margin-bottom:20px; opacity:.55; }
+    .temo-txt { font-family:'Cormorant Garamond',serif; font-style:italic; font-weight:300; font-size:17px; color:var(--navy-mid); line-height:1.6; margin-bottom:24px; }
+    .temo-sig { font-size:11px; letter-spacing:.12em; color:var(--muted); }
+    .temo-sig b { color:var(--navy-mid); font-weight:400; }
+
+    /* GARANTIES */
+    #garanties { background: var(--blanc); padding: 80px 56px; }
+    #garanties .inner { max-width:1200px; margin:0 auto; }
+    .guar-grid { display:grid; grid-template-columns:repeat(4,1fr); border:1px solid rgba(196,164,107,.12); border-radius:3px; overflow:hidden; margin-top:56px; }
+    .guar-item { padding:40px 36px; border-right:1px solid rgba(196,164,107,.12); }
+    .guar-item:last-child { border-right:none; }
+    .guar-ico { margin-bottom:20px; }
+    .guar-ttl { font-family:'Cormorant Garamond',serif; font-weight:500; font-size:18px; color:var(--navy-mid); margin-bottom:10px; }
+    .guar-desc { font-size:13px; color:var(--muted); line-height:1.7; }
+
+    /* TARIFS */
+    #tarifs { background: var(--beige); padding: 120px 56px; }
+    #tarifs .inner { max-width:960px; margin:0 auto; }
+    .tarif-grid { display:grid; grid-template-columns:1fr 1.15fr; gap:24px; margin-top:64px; }
+    .t-card { background:var(--blanc); border-radius:3px; padding:52px 44px; border:1px solid rgba(196,164,107,.12); position:relative; }
+    .t-card.feat { border:1.5px solid var(--or); box-shadow:0 16px 56px rgba(196,164,107,.12); }
+    .t-badge { position:absolute; top:24px; right:24px; background:var(--or); color:var(--navy); font-size:8px; letter-spacing:.22em; text-transform:uppercase; padding:5px 11px; border-radius:1px; font-weight:500; }
+    .t-name { font-family:'Cormorant Garamond',serif; font-weight:300; font-size:22px; color:var(--navy-mid); margin-bottom:8px; letter-spacing:.05em; }
+    .t-price { font-family:'Cormorant Garamond',serif; font-weight:300; font-size:72px; color:var(--or); line-height:1; margin:20px 0 8px; letter-spacing:-.02em; }
+    .t-price sup { font-size:28px; vertical-align:super; }
+    .t-sub { font-size:12px; color:var(--muted); letter-spacing:.08em; margin-bottom:32px; }
+    .t-list { display:flex; flex-direction:column; gap:12px; margin-bottom:36px; }
+    .t-li { display:flex; gap:12px; align-items:flex-start; font-size:13px; color:var(--texte); line-height:1.5; }
+    .t-li::before { content:'✦'; color:var(--or); font-size:9px; margin-top:3px; flex-shrink:0; }
+    .t-note { font-size:10px; color:var(--muted); letter-spacing:.1em; text-align:center; margin-top:14px; }
+
+    /* FAQ */
+    #faq { background: var(--blanc); padding: 120px 56px; }
+    #faq .inner { max-width:760px; margin:0 auto; }
+    .faq-list { margin-top:56px; }
+    .faq-item { border-bottom:1px solid rgba(196,164,107,.18); }
+    .faq-q { display:flex; justify-content:space-between; align-items:center; padding:24px 0; cursor:none; gap:16px; }
+    .faq-q-txt { font-family:'Cormorant Garamond',serif; font-weight:400; font-size:20px; color:var(--navy-mid); line-height:1.3; }
+    .faq-icon { width:28px; height:28px; border:1px solid rgba(196,164,107,.3); border-radius:50%; display:flex; align-items:center; justify-content:center; flex-shrink:0; transition:background .25s, border-color .25s; }
+    .faq-item.open .faq-icon { background:var(--or); border-color:var(--or); }
+    .faq-icon svg { transition:transform .3s; }
+    .faq-item.open .faq-icon svg { transform:rotate(45deg); }
+    .faq-a { max-height:0; overflow:hidden; transition:max-height .45s cubic-bezier(.16,1,.3,1), padding .35s; }
+    .faq-item.open .faq-a { max-height:200px; }
+    .faq-a-inner { padding:0 0 24px; font-size:14px; color:var(--muted); line-height:1.85; border-left:2px solid var(--or); padding-left:20px; }
+    .faq-line { display:block; height:2px; background:linear-gradient(to right,var(--or),transparent); transform:scaleX(0); transform-origin:left; transition:transform .45s cubic-bezier(.16,1,.3,1); margin-bottom:0; }
+    .faq-item.open .faq-line { transform:scaleX(1); }
+
+    /* FOOTER */
+    footer { background:#080F1B; padding:64px 56px; display:flex; flex-direction:column; align-items:center; gap:24px; text-align:center; position:relative; }
+    footer::before { content:''; position:absolute; top:0; left:10%; right:10%; height:1px; background:linear-gradient(to right,transparent,var(--or),transparent); opacity:.35; }
+    .ft-logo { font-family:'Cormorant Garamond',serif; font-weight:300; font-size:17px; letter-spacing:.32em; text-transform:uppercase; color:rgba(240,234,224,.35); }
+    .ft-logo b { color:rgba(196,164,107,.55); }
+    .ft-tag { font-family:'Cormorant Garamond',serif; font-style:italic; font-size:14px; color:rgba(196,164,107,.4); letter-spacing:.04em; }
+    .ft-div { width:100%; max-width:400px; height:1px; background:rgba(196,164,107,.12); }
+    .ft-email { font-size:13px; color:rgba(196,164,107,.6); }
+    .ft-legal { font-size:9px; letter-spacing:.15em; text-transform:uppercase; color:rgba(240,234,224,.18); }
+
+    /* RESPONSIVE */
+    @media(max-width:960px){
+      nav{padding:0 24px;} .n-links{display:none;} section{padding:80px 24px;}
+      #philosophie{padding:80px 24px;} #philosophie .inner{grid-template-columns:1fr;gap:48px;}
+      .cards,.temo-grid,.guar-grid,.tarif-grid,.proc-track{grid-template-columns:1fr;}
+      .proc-track::before{display:none;} .guar-item{border-right:none;border-bottom:1px solid rgba(196,164,107,.1);}
+      #prestations,#processus,#temoignages,#garanties,#tarifs,#faq{padding:80px 24px;}
+      footer{padding:48px 24px;}
+    }
+  </style>
+</head>
+<body>
+
+<div class="cur-ring" id="cR"></div>
+<div class="cur-dot"  id="cD"></div>
+
+<div id="loader">
+  <div class="ld-icon">
+    <svg width="80" height="42" viewBox="0 0 96 50" fill="none">
+      <ellipse cx="48" cy="25" rx="46" ry="22" stroke="#FAF8F5" stroke-width="1.6"/>
+      <ellipse cx="48" cy="25" rx="28" ry="13" stroke="#C4A46B" stroke-width=".9" stroke-dasharray="2 4"/>
+      <circle cx="48" cy="25" r="2.5" fill="#C4A46B"/>
+      <line x1="48" y1="20" x2="48" y2="18" stroke="#C4A46B" stroke-width=".9" stroke-linecap="round"/>
+      <line x1="48" y1="30" x2="48" y2="32" stroke="#C4A46B" stroke-width=".9" stroke-linecap="round"/>
+      <line x1="43" y1="25" x2="41" y2="25" stroke="#C4A46B" stroke-width=".9" stroke-linecap="round"/>
+      <line x1="53" y1="25" x2="55" y2="25" stroke="#C4A46B" stroke-width=".9" stroke-linecap="round"/>
+    </svg>
+  </div>
+  <div class="ld-bar"><div class="ld-bar-fill"></div></div>
+  <div class="ld-txt">Capsule Mémoire</div>
+</div>
+
+<!-- NAV -->
+<nav id="nav">
+  <a href="#hero" class="n-logo">
+    <svg width="28" height="15" viewBox="0 0 96 50" fill="none"><ellipse cx="48" cy="25" rx="46" ry="22" stroke="#FAF8F5" stroke-width="1.8"/><ellipse cx="48" cy="25" rx="28" ry="13" stroke="#C4A46B" stroke-width=".9" stroke-dasharray="2 4"/><circle cx="48" cy="25" r="2.5" fill="#C4A46B"/></svg>
+    <span class="n-logo-txt">CAPSULE <b>MÉMOIRE</b></span>
+  </a>
+  <div class="n-links">
+    <a href="#prestations">Prestations</a>
+    <a href="#processus">Processus</a>
+    <a href="#tarifs">Tarifs</a>
+    <a href="#faq">FAQ</a>
+  </div>
+  <div class="n-cta">
+    <a href="#tarifs" class="btn-or mag">Commencer ma Capsule</a>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section id="hero">
+  <div class="h-glow1"></div><div class="h-glow2"></div>
+  <div class="h-eyebrow rv">Service de préservation mémorielle · France</div>
+  <h1 class="h-title rv d1">Préserver<br><em>l'essentiel.</em></h1>
+  <p class="h-sub rv d2">Parce que certaines voix méritent<br>de ne jamais disparaître.</p>
+  <p class="h-tagline rv d3">Un souvenir qui dure toute une vie</p>
+  <div class="h-btns rv d4">
+    <a href="#tarifs" class="btn-or mag">Commencer ma Capsule</a>
+    <a href="#philosophie" class="btn-ghost">Découvrir</a>
+  </div>
+  <div class="h-scroll">
+    <svg width="1" height="28" viewBox="0 0 1 28"><line x1=".5" y1="0" x2=".5" y2="28" stroke="#C4A46B" stroke-width="1"/></svg>
+    Défiler
+  </div>
+</section>
+
+<!-- PHILOSOPHIE -->
+<section id="philosophie">
+  <div class="inner">
+    <div>
+      <div class="sec-lbl rv">Notre philosophie</div>
+      <div class="philo-body rv d1">
+        <p>Nous n'utilisons pas les mots <em>mort</em> ou <em>deuil</em>. Nous parlons de présence, de trace, de transmission.</p>
+        <p>Capsule Mémoire utilise l'intelligence artificielle pour reconstituer la voix, le visage et l'histoire d'un être cher — afin que les générations futures puissent le rencontrer.</p>
+        <p style="margin-top:32px;font-family:'Cormorant Garamond',serif;font-style:italic;font-size:17px;color:var(--navy-mid);line-height:1.6;">Un service pensé pour les familles qui refusent que l'essentiel s'efface.</p>
+      </div>
+    </div>
+    <div class="philo-right rv d2">
+      <blockquote class="philo-cit">"On ne ressuscite pas.<br>On préserve un souvenir<br><span>digne."</span></blockquote>
+      <p class="philo-sig">La conviction fondatrice de Capsule Mémoire</p>
+    </div>
+  </div>
+</section>
+
+<!-- PRESTATIONS -->
+<section id="prestations">
+  <div class="inner">
+    <div class="hdr">
+      <div class="sec-lbl rv">Nos prestations</div>
+      <h2 class="sec-ttl rv d1">Trois façons de garder vivant<br><em>ce qui ne doit pas s'effacer.</em></h2>
+    </div>
+    <div class="cards">
+      <div class="card rv">
+        <div class="card-ico">
+          <svg width="42" height="42" viewBox="0 0 40 40" fill="none">
+            <ellipse cx="20" cy="16" rx="7" ry="10" stroke="#1A2B4A" stroke-width="1.4"/>
+            <path d="M11 19c0 5 4 9 9 9s9-4 9-9" stroke="#1A2B4A" stroke-width="1.4" stroke-linecap="round"/>
+            <line x1="20" y1="28" x2="20" y2="34" stroke="#1A2B4A" stroke-width="1.4" stroke-linecap="round"/>
+            <line x1="15" y1="34" x2="25" y2="34" stroke="#1A2B4A" stroke-width="1.4" stroke-linecap="round"/>
+            <line x1="16" y1="14" x2="24" y2="14" stroke="#C4A46B" stroke-width="1" stroke-linecap="round" opacity=".8"/>
+            <line x1="16" y1="17" x2="24" y2="17" stroke="#C4A46B" stroke-width="1" stroke-linecap="round" opacity=".5"/>
+          </svg>
+        </div>
+        <h3 class="card-ttl">La Voix Reconstituée</h3>
+        <p class="card-desc">À partir de vos enregistrements existants, nous reconstituons la voix de votre proche. Un message audio unique, pour ne plus jamais oublier comment il parlait.</p>
+        <span class="badge">Inclus dans la Capsule</span>
+      </div>
+      <div class="card rv d1">
+        <div class="card-ico">
+          <svg width="42" height="42" viewBox="0 0 40 40" fill="none">
+            <circle cx="20" cy="18" r="11" stroke="#1A2B4A" stroke-width="1.4"/>
+            <circle cx="16.5" cy="16.5" r="1.5" fill="#1A2B4A"/>
+            <circle cx="23.5" cy="16.5" r="1.5" fill="#1A2B4A"/>
+            <path d="M15.5 22c1.2 2.5 7.8 2.5 9 0" stroke="#1A2B4A" stroke-width="1.3" stroke-linecap="round"/>
+            <path d="M9 33c0-5 5-8 11-8s11 3 11 8" stroke="#1A2B4A" stroke-width="1.4" stroke-linecap="round"/>
+            <circle cx="20" cy="18" r="14.5" stroke="#C4A46B" stroke-width=".7" stroke-dasharray="1.5 3"/>
+          </svg>
+        </div>
+        <h3 class="card-ttl">Le Portrait Vivant</h3>
+        <p class="card-desc">Une photographie devient un portrait animé. Le sourire, le regard — redonner vie à une image pour les moments où les mots manquent.</p>
+        <span class="badge">Add-on disponible</span>
+      </div>
+      <div class="card rv d2">
+        <div class="card-ico">
+          <svg width="42" height="42" viewBox="0 0 40 40" fill="none">
+            <path d="M20 8v26" stroke="#C4A46B" stroke-width=".9" stroke-linecap="round"/>
+            <path d="M7 10h13v22H7a1 1 0 01-1-1V11a1 1 0 011-1z" stroke="#1A2B4A" stroke-width="1.4"/>
+            <path d="M20 10h13a1 1 0 011 1v20a1 1 0 01-1 1H20V10z" stroke="#1A2B4A" stroke-width="1.4"/>
+            <line x1="10" y1="16" x2="17" y2="16" stroke="#1A2B4A" stroke-width="1" stroke-linecap="round" opacity=".4"/>
+            <line x1="10" y1="20" x2="17" y2="20" stroke="#1A2B4A" stroke-width="1" stroke-linecap="round" opacity=".3"/>
+            <line x1="23" y1="16" x2="30" y2="16" stroke="#C4A46B" stroke-width="1" stroke-linecap="round" opacity=".7"/>
+            <line x1="23" y1="20" x2="30" y2="20" stroke="#C4A46B" stroke-width="1" stroke-linecap="round" opacity=".5"/>
+          </svg>
+        </div>
+        <h3 class="card-ttl">Le Livre de Vie</h3>
+        <p class="card-desc">Une biographie illustrée et mise en page, rédigée à partir de vos souvenirs. L'histoire d'une vie entière, préservée dans un objet précieux à offrir à toute la famille.</p>
+        <span class="badge">Add-on disponible</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- PROCESSUS -->
+<section id="processus">
+  <div class="inner">
+    <div class="hdr">
+      <div class="sec-lbl rv">Comment ça marche</div>
+      <h2 class="sec-ttl rv d1">Simple, <em>sans intrusion.</em><br>Tout se fait par formulaire.</h2>
+    </div>
+    <div class="proc-track">
+      <div class="proc-step rv">
+        <div class="proc-num-wrap"><div class="proc-num">01</div></div>
+        <h3 class="proc-ttl">Formulaire confidentiel</h3>
+        <p class="proc-desc">Vous remplissez un formulaire confidentiel en 3 minutes. Aucun appel, aucune intrusion. À votre rythme.</p>
+      </div>
+      <div class="proc-step rv d1">
+        <div class="proc-num-wrap"><div class="proc-num">02</div></div>
+        <h3 class="proc-ttl">Partage des souvenirs</h3>
+        <p class="proc-desc">Vous partagez photos, vidéos et souvenirs de façon sécurisée. Tout est chiffré, hébergé en France.</p>
+      </div>
+      <div class="proc-step rv d2">
+        <div class="proc-num-wrap"><div class="proc-num">03</div></div>
+        <h3 class="proc-ttl">Création artisanale</h3>
+        <p class="proc-desc">Nos équipes façonnent votre capsule avec soin, sur 2 à 3 semaines. Chaque détail est validé avec vous par message.</p>
+      </div>
+      <div class="proc-step rv d3">
+        <div class="proc-num-wrap"><div class="proc-num">04</div></div>
+        <h3 class="proc-ttl">Livraison dans un écrin</h3>
+        <p class="proc-desc">Votre capsule est livrée dans un écrin, pour toujours. Accès en ligne à vie, sécurisé et partageable.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- TÉMOIGNAGES -->
+<section id="temoignages">
+  <div class="inner">
+    <div class="hdr">
+      <div class="sec-lbl rv">Témoignages</div>
+      <h2 class="sec-ttl rv d1">Ils nous ont <em>confié l'essentiel.</em></h2>
+    </div>
+    <div class="temo-grid">
+      <div class="temo-card rv">
+        <span class="temo-mark">"</span>
+        <p class="temo-txt">Je n'aurais jamais cru que je pourrais encore entendre sa voix. C'est le plus beau cadeau que j'aie reçu.</p>
+        <p class="temo-sig"><b>Marie, 54 ans</b> · Perte de son père</p>
+      </div>
+      <div class="temo-card rv d1">
+        <span class="temo-mark">"</span>
+        <p class="temo-txt">Nous avons offert le livre de vie à toute la famille lors du repas d'enterrement. Tout le monde a pleuré, mais de gratitude.</p>
+        <p class="temo-sig"><b>Thomas &amp; Lucie</b> · Perte de leur mère</p>
+      </div>
+      <div class="temo-card rv d2">
+        <span class="temo-mark">"</span>
+        <p class="temo-txt">J'ai commandé ma Capsule avant de partir, pour que mes enfants m'entendent encore dans 20 ans.</p>
+        <p class="temo-sig"><b>Geneviève, 71 ans</b> · Anticipation</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- GARANTIES -->
+<section id="garanties">
+  <div class="inner">
+    <div class="hdr">
+      <div class="sec-lbl rv">Nos engagements</div>
+      <h2 class="sec-ttl rv d1">Vous méritez <em>la sérénité totale.</em></h2>
+    </div>
+    <div class="guar-grid rv d1">
+      <div class="guar-item">
+        <div class="guar-ico"><svg width="36" height="36" viewBox="0 0 36 36" fill="none"><path d="M18 4 L30 9 L30 18 C30 25 24 30 18 32 C12 30 6 25 6 18 L6 9 Z" stroke="#C4A46B" stroke-width="1.3" fill="none"/><path d="M13 18l3 3 7-7" stroke="#C4A46B" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+        <h4 class="guar-ttl">Confidentialité totale</h4>
+        <p class="guar-desc">Vos données ne sont jamais partagées. Hébergement France. Suppression à votre demande.</p>
+      </div>
+      <div class="guar-item">
+        <div class="guar-ico"><svg width="36" height="36" viewBox="0 0 36 36" fill="none"><path d="M28 20 C26 26 20 30 14 28 C8 26 5 20 7 14 C9 8 15 5 21 7" stroke="#C4A46B" stroke-width="1.3" stroke-linecap="round" fill="none"/><path d="M22 4l6 4-4 6" stroke="#C4A46B" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg></div>
+        <h4 class="guar-ttl">Satisfait ou remboursé</h4>
+        <p class="guar-desc">14 jours sans condition. Si la capsule ne vous correspond pas, nous vous remboursons intégralement.</p>
+      </div>
+      <div class="guar-item">
+        <div class="guar-ico"><svg width="36" height="36" viewBox="0 0 36 36" fill="none"><path d="M10 12h16M10 18h10M10 24h12" stroke="#C4A46B" stroke-width="1.3" stroke-linecap="round"/><rect x="5" y="6" width="26" height="24" rx="2" stroke="#C4A46B" stroke-width="1.3"/></svg></div>
+        <h4 class="guar-ttl">Accompagnement humain</h4>
+        <p class="guar-desc">Par message, à chaque étape. Un conseiller dédié suit votre commande du début à la livraison.</p>
+      </div>
+      <div class="guar-item">
+        <div class="guar-ico"><svg width="36" height="36" viewBox="0 0 36 36" fill="none"><path d="M18 6 L18 30 M18 6 L12 12 M18 6 L24 12" stroke="#C4A46B" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><circle cx="18" cy="26" r="4" stroke="#C4A46B" stroke-width="1.3" fill="none"/></svg></div>
+        <h4 class="guar-ttl">Livraison express</h4>
+        <p class="guar-desc">Option 72h disponible pour les situations urgentes. Voix + portrait animé livrés en priorité.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- TARIFS -->
+<section id="tarifs">
+  <div class="inner">
+    <div class="hdr" style="text-align:center">
+      <div class="sec-lbl rv">Tarifs</div>
+      <h2 class="sec-ttl rv d1">Choisissez <em>votre capsule.</em></h2>
+    </div>
+    <div class="tarif-grid">
+
+      <!-- OFFRE 1 -->
+      <div class="t-card rv">
+        <p class="t-name">Capsule Souvenir</p>
+        <div class="t-price"><sup>€</sup>690</div>
+        <p class="t-sub">L'essentiel · Livraison sous 72 heures</p>
+        <ul class="t-list">
+          <li class="t-li">Jusqu'à 3 photos restaurées et animées</li>
+          <li class="t-li">Voix reconstituée lisant un message personnalisé</li>
+          <li class="t-li">Vidéo souvenir 1 à 2 min avec musique</li>
+          <li class="t-li">Livraison par lien privé sécurisé</li>
+        </ul>
+        <div style="margin-top:8px;">
+          <stripe-buy-button
+            buy-button-id="buy_btn_1TRALgFGbNzIgsMgBJDXvdvZ"
+            publishable-key="pk_live_51TChBEFGbNzIgsMgvdOEwlvVpl0SqE964QA8FzxWZr7g7F6CO7mo3EozIpA1Z4o5BcFBjNencdGQVsz1m7WGhyTL00djLEuJRg"
+          ></stripe-buy-button>
+        </div>
+        <p class="t-note">Paiement sécurisé · Confidentialité garantie</p>
+      </div>
+
+      <!-- OFFRE 2 -->
+      <div class="t-card feat rv d1">
+        <div class="t-badge">Le plus choisi</div>
+        <p class="t-name">Capsule Mémoire Complète</p>
+        <div class="t-price"><sup>€</sup>990</div>
+        <p class="t-sub">L'hommage complet · Livraison sous 5 jours</p>
+        <ul class="t-list">
+          <li class="t-li">Jusqu'à 10 photos restaurées et animées</li>
+          <li class="t-li">Voix reconstituée sur plusieurs extraits</li>
+          <li class="t-li">Vidéo souvenir enrichie</li>
+          <li class="t-li">Livre de vie PDF 20 à 30 pages</li>
+          <li class="t-li">Livraison par lien privé sécurisé</li>
+        </ul>
+        <div style="margin-top:8px;">
+          <stripe-buy-button
+            buy-button-id="buy_btn_1TRAO1FGbNzIgsMgknwo7UgC"
+            publishable-key="pk_live_51TChBEFGbNzIgsMgvdOEwlvVpl0SqE964QA8FzxWZr7g7F6CO7mo3EozIpA1Z4o5BcFBjNencdGQVsz1m7WGhyTL00djLEuJRg"
+          ></stripe-buy-button>
+        </div>
+        <p class="t-note">Paiement sécurisé · Confidentialité garantie</p>
+      </div>
+
+    </div>
+
+    <!-- ADD-ONS -->
+    <div style="margin-top:48px;padding:36px 40px;border:1px solid rgba(196,164,107,.2);border-radius:3px;background:rgba(196,164,107,.04);">
+      <div class="sec-lbl" style="margin-bottom:20px;">Options — 150 € l'option</div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:20px;">
+        <div>
+          <div style="font-family:'Cormorant Garamond',serif;font-weight:500;font-size:17px;color:var(--navy-mid);margin-bottom:6px;">Livre de Vie Imprimé</div>
+          <p style="font-size:12px;color:var(--muted);line-height:1.6;">Format 21×21 cm, couverture rigide, expédié à domicile.</p>
+        </div>
+        <div>
+          <div style="font-family:'Cormorant Garamond',serif;font-weight:500;font-size:17px;color:var(--navy-mid);margin-bottom:6px;">Souvenir Physique</div>
+          <p style="font-size:12px;color:var(--muted);line-height:1.6;">Clé USB gravée + boîte souvenir, expédiées à domicile.</p>
+        </div>
+        <div>
+          <div style="font-family:'Cormorant Garamond',serif;font-weight:500;font-size:17px;color:var(--navy-mid);margin-bottom:6px;">Deuxième Version</div>
+          <p style="font-size:12px;color:var(--muted);line-height:1.6;">Autre message, autre montage, ou autre langue.</p>
+        </div>
+      </div>
+      <p style="font-size:11px;color:var(--muted);margin-top:20px;text-align:center;letter-spacing:.08em;">Les options s'ajoutent lors du questionnaire après commande.</p>
+    </div>
+
+  </div>
+</section>
+
+<!-- ENGAGEMENT ÉTHIQUE -->
+<section id="ethique" style="background:var(--navy-mid);padding:100px 56px;position:relative;overflow:hidden;">
+  <div style="position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(to right,transparent,rgba(196,164,107,.25),transparent);"></div>
+  <div style="position:absolute;inset:0;background:radial-gradient(ellipse 50% 60% at 80% 50%,rgba(196,164,107,.04) 0%,transparent 70%);pointer-events:none;"></div>
+  <div class="inner" style="max-width:1200px;margin:0 auto;display:grid;grid-template-columns:1fr 1fr;gap:96px;align-items:center;">
+    <div>
+      <div class="sec-lbl rv" style="color:var(--or);">Notre engagement</div>
+      <h2 class="sec-ttl rv d1" style="color:var(--blanc);margin-bottom:28px;">Ce que vous nous <em>confiez</em><br>est sacré.</h2>
+      <div class="rv d2" style="font-size:15px;color:rgba(240,234,224,.55);line-height:1.9;">
+        <p>Vos photos, votre voix, vos souvenirs — nous en sommes les gardiens temporaires, pas les propriétaires.</p>
+        <p style="margin-top:16px;">L'intelligence artificielle que nous utilisons sert à restaurer et transmettre ce qui existe déjà. Jamais à inventer. Jamais à tromper.</p>
+      </div>
+      <a href="ethique.html" class="rv d3" style="display:inline-flex;align-items:center;gap:10px;margin-top:36px;font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--or);border-bottom:1px solid rgba(196,164,107,.3);padding-bottom:4px;transition:border-color .2s;" onmouseover="this.style.borderColor='#C4A46B'" onmouseout="this.style.borderColor='rgba(196,164,107,.3)'">Lire notre engagement complet →</a>
+    </div>
+    <div class="rv d2" style="display:flex;flex-direction:column;gap:16px;">
+      <div style="display:flex;gap:16px;align-items:flex-start;padding:22px 24px;border:1px solid rgba(196,164,107,.12);border-radius:2px;background:rgba(255,255,255,.02);">
+        <div style="width:8px;height:8px;background:var(--or);border-radius:50%;flex-shrink:0;margin-top:5px;opacity:.7;"></div>
+        <div>
+          <div style="font-family:'Cormorant Garamond',serif;font-weight:500;font-size:17px;color:var(--blanc);margin-bottom:6px;">Consentement de la famille</div>
+          <p style="font-size:13px;color:rgba(240,234,224,.45);line-height:1.6;">Chaque capsule est créée avec le consentement explicite d'un proche. Toujours.</p>
+        </div>
+      </div>
+      <div style="display:flex;gap:16px;align-items:flex-start;padding:22px 24px;border:1px solid rgba(196,164,107,.12);border-radius:2px;background:rgba(255,255,255,.02);">
+        <div style="width:8px;height:8px;background:var(--or);border-radius:50%;flex-shrink:0;margin-top:5px;opacity:.7;"></div>
+        <div>
+          <div style="font-family:'Cormorant Garamond',serif;font-weight:500;font-size:17px;color:var(--blanc);margin-bottom:6px;">Suppression après livraison</div>
+          <p style="font-size:13px;color:rgba(240,234,224,.45);line-height:1.6;">Vos données sont supprimées dans les 30 jours suivant la livraison. Sans exception.</p>
+        </div>
+      </div>
+      <div style="display:flex;gap:16px;align-items:flex-start;padding:22px 24px;border:1px solid rgba(196,164,107,.12);border-radius:2px;background:rgba(255,255,255,.02);">
+        <div style="width:8px;height:8px;background:var(--or);border-radius:50%;flex-shrink:0;margin-top:5px;opacity:.7;"></div>
+        <div>
+          <div style="font-family:'Cormorant Garamond',serif;font-weight:500;font-size:17px;color:var(--blanc);margin-bottom:6px;">Transparence sur l'IA</div>
+          <p style="font-size:13px;color:rgba(240,234,224,.45);line-height:1.6;">Chaque capsule livrée mentionne clairement l'usage de l'intelligence artificielle.</p>
+        </div>
+      </div>
+      <div style="display:flex;gap:16px;align-items:flex-start;padding:22px 24px;border:1px solid rgba(196,164,107,.12);border-radius:2px;background:rgba(255,255,255,.02);">
+        <div style="width:8px;height:8px;background:var(--or);border-radius:50%;flex-shrink:0;margin-top:5px;opacity:.7;"></div>
+        <div>
+          <div style="font-family:'Cormorant Garamond',serif;font-weight:500;font-size:17px;color:var(--blanc);margin-bottom:6px;">Zéro deepfake malveillant</div>
+          <p style="font-size:13px;color:rgba(240,234,224,.45);line-height:1.6;">Nous refusons toute demande dont l'intention nous semble douteuse. Sans discussion.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FAQ -->
+<section id="faq">
+  <div class="inner">
+    <div class="hdr">
+      <div class="sec-lbl rv">Questions fréquentes</div>
+      <h2 class="sec-ttl rv d1">Tout ce que vous <em>méritez de savoir.</em></h2>
+    </div>
+    <div class="faq-list">
+      <div class="faq-item">
+        <span class="faq-line"></span>
+        <div class="faq-q"><span class="faq-q-txt">Est-ce que le résultat ressemblera vraiment à mon proche ?</span><div class="faq-icon"><svg width="12" height="12" viewBox="0 0 12 12" fill="none"><line x1="6" y1="1" x2="6" y2="11" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><line x1="1" y1="6" x2="11" y2="6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></div></div>
+        <div class="faq-a"><div class="faq-a-inner">Oui. Nous travaillons à partir de vos enregistrements réels. Plus vous en partagez, plus le résultat est fidèle. Nous ne livrons jamais sans votre validation complète.</div></div>
+      </div>
+      <div class="faq-item">
+        <span class="faq-line"></span>
+        <div class="faq-q"><span class="faq-q-txt">Et si je n'ai que peu d'enregistrements ?</span><div class="faq-icon"><svg width="12" height="12" viewBox="0 0 12 12" fill="none"><line x1="6" y1="1" x2="6" y2="11" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><line x1="1" y1="6" x2="11" y2="6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></div></div>
+        <div class="faq-a"><div class="faq-a-inner">Quelques secondes suffisent pour la voix. Pour le portrait, une seule photo de qualité est suffisante. Nous faisons tout pour travailler avec ce que vous avez.</div></div>
+      </div>
+      <div class="faq-item">
+        <span class="faq-line"></span>
+        <div class="faq-q"><span class="faq-q-txt">Mes données et mes souvenirs sont-ils protégés ?</span><div class="faq-icon"><svg width="12" height="12" viewBox="0 0 12 12" fill="none"><line x1="6" y1="1" x2="6" y2="11" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><line x1="1" y1="6" x2="11" y2="6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></div></div>
+        <div class="faq-a"><div class="faq-a-inner">Absolument. Tout est chiffré, hébergé en France, et supprimé de nos serveurs après livraison si vous le souhaitez. Conformité RGPD totale.</div></div>
+      </div>
+      <div class="faq-item">
+        <span class="faq-line"></span>
+        <div class="faq-q"><span class="faq-q-txt">Comment se passe le paiement ?</span><div class="faq-icon"><svg width="12" height="12" viewBox="0 0 12 12" fill="none"><line x1="6" y1="1" x2="6" y2="11" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><line x1="1" y1="6" x2="11" y2="6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></div></div>
+        <div class="faq-a"><div class="faq-a-inner">En ligne, 100% sécurisé, par carte ou virement. Vous pouvez payer en 2 fois sans frais.</div></div>
+      </div>
+      <div class="faq-item">
+        <span class="faq-line"></span>
+        <div class="faq-q"><span class="faq-q-txt">Peut-on commander pour anticiper, de son vivant ?</span><div class="faq-icon"><svg width="12" height="12" viewBox="0 0 12 12" fill="none"><line x1="6" y1="1" x2="6" y2="11" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><line x1="1" y1="6" x2="11" y2="6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></div></div>
+        <div class="faq-a"><div class="faq-a-inner">Oui. C'est même le choix le plus précieux. Beaucoup de nos clients préparent leur Capsule pour leurs enfants ou petits-enfants, de leur vivant.</div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="ft-logo">CAPSULE <b>MÉMOIRE</b></div>
+  <p class="ft-tag">"Un souvenir qui dure toute une vie."</p>
+  <div class="ft-div"></div>
+  <a href="mailto:contact.capsulememoire@gmail.com" class="ft-email">contact.capsulememoire@gmail.com</a>
+  <a href="ethique.html" style="font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:rgba(196,164,107,.4);transition:color .2s;" onmouseover="this.style.color='#C4A46B'" onmouseout="this.style.color='rgba(196,164,107,.4)'">Notre engagement éthique</a>
+  <p class="ft-legal">© 2025 Capsule Mémoire · Traitement confidentiel · RGPD</p>
+</footer>
+
+<script>
+/* CURSOR */
+const cR = document.getElementById('cR'), cD = document.getElementById('cD');
+let mx=-99,my=-99,rx=-99,ry=-99;
+document.addEventListener('mousemove',e=>{mx=e.clientX;my=e.clientY;});
+(function loop(){rx+=(mx-rx)*.12;ry+=(my-ry)*.12;cR.style.left=rx+'px';cR.style.top=ry+'px';cD.style.left=mx+'px';cD.style.top=my+'px';requestAnimationFrame(loop);})();
+
+/* LOADER */
+window.addEventListener('load',()=>{
+  setTimeout(()=>{
+    document.getElementById('loader').classList.add('out');
+    document.querySelectorAll('#hero .rv').forEach(el=>el.classList.add('in'));
+  },1800);
+});
+
+/* NAV SCROLL */
+const nav=document.getElementById('nav');
+window.addEventListener('scroll',()=>nav.classList.toggle('on',scrollY>60),{passive:true});
+
+/* REVEAL */
+const obs=new IntersectionObserver(en=>{en.forEach(e=>{if(e.isIntersecting)e.target.classList.add('in');});},{threshold:.1});
+document.querySelectorAll('.rv:not(#hero .rv)').forEach(el=>obs.observe(el));
+
+/* MAGNETIC */
+document.querySelectorAll('.mag').forEach(b=>{
+  b.addEventListener('mousemove',e=>{const r=b.getBoundingClientRect();b.style.transform=`translate(${(e.clientX-r.left-r.width/2)*.22}px,${(e.clientY-r.top-r.height/2)*.3}px)`;});
+  b.addEventListener('mouseleave',()=>{b.style.transition='transform .5s cubic-bezier(.16,1,.3,1),background .2s';b.style.transform='translate(0,0)';setTimeout(()=>b.style.transition='',500);});
+  b.addEventListener('mouseenter',()=>{b.style.transition='transform .15s ease,background .2s';});
+});
+
+/* FAQ */
+document.querySelectorAll('.faq-q').forEach(q=>{
+  q.addEventListener('click',()=>{
+    const item=q.closest('.faq-item');
+    const isOpen=item.classList.contains('open');
+    document.querySelectorAll('.faq-item').forEach(i=>i.classList.remove('open'));
+    if(!isOpen) item.classList.add('open');
+  });
+});
+</script>
+</body>
+</html>
